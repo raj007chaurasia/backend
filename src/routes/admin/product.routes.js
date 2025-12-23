@@ -6,7 +6,7 @@ const {
   getProductById,
   saveProduct,
   deleteProduct
-} = require("../controllers/product.controller");
+} = require("../../controllers/admin/product.controller");
 
 // ADMIN PRODUCT ROUTES
 router.get("/", getAllProducts);

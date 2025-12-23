@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { Admin } = require("../models");
+const { Admin } = require("../../models");
 const { Permission } = require("../models");
 const { generateToken, extractToken } = require("../../config/jwt");
 const { Users, Permissions} = require("../../config/permission");
@@ -247,7 +247,7 @@ exports.adminLogin = async (req, res) => {
 
     const token = generateToken({ id: admin.id, role: "AdminUser", isAdmin: admin.isAdmin, permissions: permissionKeys });
 
-    return res.status(200).json({ success: true, message: "Admin login successful", token });
+    return res.status(200).json({ success: true, message: "Admin login successful", token, permissions: permissionKeys });
 
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });

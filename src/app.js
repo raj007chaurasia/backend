@@ -12,6 +12,12 @@ const flavourRoutes = require("./routes/admin/flavour.routes");
 const productRoutes = require("./routes/admin/product.routes");
 const adminRoutes = require("./routes/admin/admin.routes");
 
+
+const customerProductRoutes = require("./routes/customerProduct.routes");
+const wishlistRoutes = require("./routes/wishlist.routes");
+
+
+
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("src/uploads"));
@@ -24,5 +30,10 @@ app.use("/api/admin/categories", categoryRoutes);
 app.use("/api/admin/flavours", flavourRoutes);
 app.use("/api/admin/products", productRoutes);
 app.use("/api/admin/users", adminRoutes);
+
+
+
+app.use("/api/products", customerProductRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 
 module.exports = app;
