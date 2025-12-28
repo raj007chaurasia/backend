@@ -15,6 +15,7 @@ const adminRoutes = require("./routes/admin/admin.routes");
 
 const customerProductRoutes = require("./routes/customerProduct.routes");
 const wishlistRoutes = require("./routes/wishlist.routes");
+const cartRoutes = require("./routes/wishlist.routes");
 
 
 
@@ -35,5 +36,6 @@ app.use("/api/admin/users", adminRoutes);
 
 app.use("/api/products", customerProductRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/cart", cartRoutes);
 
 module.exports = app;

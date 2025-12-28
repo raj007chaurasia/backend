@@ -87,20 +87,7 @@ exports.saveProduct = async (req, res) => {
   let message = "";
 
   try {
-    const {
-      id,
-      name,
-      description,
-      rating,
-      price,
-      brandId,
-      categoryId,
-      eDietType,
-      weights = [],
-      tags = [],
-      flavours = [],
-      images = []
-    } = req.body;
+    const { id, name, description, information, rating, price, discountPrice, brandId, categoryId, eDietType, Qty, weights = [], tags = [], flavours = [], images = [] } = req.body;
 
     if (!name || !price)
       return res.status(400).json({ success: false, message: "Product name and price are required" });
@@ -118,11 +105,14 @@ exports.saveProduct = async (req, res) => {
         {
           name,
           description,
+          information,
           rating,
           price,
+          discountPrice,
           BrandId: brandId,
           eDietType,
-          CategoryId: categoryId
+          CategoryId: categoryId,
+          Qty
         },
         { transaction: t }
       );
@@ -140,11 +130,14 @@ exports.saveProduct = async (req, res) => {
         {
           name,
           description,
+          information,
           rating,
           price,
+          discountPrice,
           BrandId: brandId,
           eDietType,
-          CategoryId: categoryId
+          CategoryId: categoryId,
+          Qty
         },
         { transaction: t }
       );

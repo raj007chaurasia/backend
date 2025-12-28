@@ -20,12 +20,22 @@ module.exports = (sequelize) => {
         allowNull: true
       },
 
+      Information: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+
       Rating: {
         type: DataTypes.DECIMAL,
         allowNull: true
       },
 
       Price: {
+        type: DataTypes.DECIMAL,
+        allowNull: true
+      },
+
+      DiscountPrice: {
         type: DataTypes.DECIMAL,
         allowNull: true
       },
@@ -41,6 +51,11 @@ module.exports = (sequelize) => {
       },
 
       CategoryId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+      },
+
+      Qty: {
         type: DataTypes.INTEGER,
         allowNull: true
       }

@@ -19,6 +19,8 @@ const ProductFlavour = require("./admin/productFlavour.model")(sequelize);
 // User
 
 const UserOtp = require("./user/userOtp.model")(sequelize);
+const Wishlist = require("./user/wishlist.model")(sequelize);
+const CartItem = require("./user/cartItem.model")(sequelize);
 
 // Relations
 
@@ -51,5 +53,7 @@ module.exports = {
   ProductFlavour,
 
 
-  UserOtp
+  UserOtp,
+  Wishlist,
+  CartItem
 };

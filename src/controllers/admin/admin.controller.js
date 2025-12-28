@@ -14,7 +14,7 @@ exports.getAllUsers = async (req, res) => {
       return res.status(400).json(jwt);
 
     const Token = jwt.Token;
-    if(!Token.permissions.contains(Users))
+    if(!TToken.permissions.includes(Users))
       return res.status(400).json({success: false, message: "you don't have permission to see users List."});
 
     const page = parseInt(req.query.page) || 1;
@@ -54,7 +54,7 @@ exports.getUserById = async (req, res) => {
       return res.status(400).json(jwt);
 
     const Token = jwt.Token;
-    if(!Token.permissions.contains(Users))
+    if(!Token.permissions.includes(Users))
       return res.status(400).json({success: false, message: "you don't have permission to see user Details."});
 
     const { id } = req.params;
@@ -81,7 +81,7 @@ exports.saveUser = async (req, res) => {
       return res.status(400).json(jwt);
 
     const Token = jwt.Token;
-    if(!Token.permissions.contains(Users))
+    if(!TToken.permissions.includes(Users))
       return res.status(400).json({success: false, message: "you don't have permission to save user."});
 
     const { id, firstName, lastName, email, phoneNo, username, password, isAdmin } = req.body;
@@ -137,7 +137,7 @@ exports.toggleUserStatus = async (req, res) => {
       return res.status(400).json(jwt);
 
     const Token = jwt.Token;
-    if(!Token.permissions.contains(Users))
+    if(!TToken.permissions.includes(Users))
       return res.status(400).json({success: false, message: "you don't have permission to change user status."});
 
     const { id } = req.params;
@@ -167,7 +167,7 @@ exports.getPermissionsByUserId = async (req, res) => {
       return res.status(400).json(jwt);
 
     const Token = jwt.Token;
-    if(!Token.permissions.contains(Permissions))
+    if(!TToken.permissions.includes(Permissions))
       return res.status(400).json({success: false, message: "you don't have permission to see user permissions."});
 
     const { userId } = req.params;
@@ -192,7 +192,7 @@ exports.savePermissions = async (req, res) => {
       return res.status(400).json(jwt);
 
     const Token = jwt.Token;
-    if(!Token.permissions.contains(Permissions))
+    if(!TToken.permissions.includes(Permissions))
       return res.status(400).json({success: false, message: "you don't have permission to save user permissions."});
 
     const { UserId, permissions } = req.body;
