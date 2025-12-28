@@ -6,7 +6,7 @@ const {
   getWeightById,
   saveWeight,
   deleteWeight
-} = require("../controllers/weight.controller");
+} = require("../../controllers/admin/weight.controller");
 
 // ADMIN WEIGHT ROUTES
 router.get("/", getAllWeights);

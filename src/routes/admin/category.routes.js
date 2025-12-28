@@ -6,7 +6,7 @@ const {
   getCategoryById,
   saveCategory,
   deleteCategory
-} = require("../controllers/category.controller");
+} = require("../../controllers/admin/category.controller");
 
 // ADMIN CATEGORY ROUTES
 router.get("/", getAllCategories);

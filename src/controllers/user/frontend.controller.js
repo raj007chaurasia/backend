@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { Product, Brand, ProductImage, ProductTag, ProductWeight, ProductFlavour, Weight, Tag, Flavour } = require("../models");
+const { Product, Brand, ProductImage, ProductTag, ProductWeight, ProductFlavour, Weight, Tag, Flavour } = require("../../models");
 
 /**
  * CUSTOMER PRODUCT LISTING (NO LOGIN)

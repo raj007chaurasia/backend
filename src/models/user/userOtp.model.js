@@ -1,5 +1,7 @@
-module.exports = (sequelize, DataTypes) => {
-    return sequelize.define("UserOtp", {
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+    return UserOTP = sequelize.define("UserOtp", {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true, 
@@ -25,7 +27,5 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.BOOLEAN,
             allowNull: true
         }
-    }, {
-        tableName: "user_otps"
     });
 };

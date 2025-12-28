@@ -1,4 +1,4 @@
-const { Flavour } = require("../models");
+const { Flavour } = require("../../models");
 
 /**
  * GET ALL FLAVOURS (WITH PAGINATION)

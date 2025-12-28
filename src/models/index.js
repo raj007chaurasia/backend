@@ -2,6 +2,7 @@ const sequelize = require("../config/db");
 
 const User = require("./user/user.model")(sequelize);
 const Admin = require("./admin/admin.model")(sequelize);
+const Permission = require("./admin/permission.model")(sequelize);
 const Brand = require("./admin/brand.model")(sequelize);
 const Weight = require("./admin/weight.model")(sequelize);
 const Tag = require("./admin/tag.model")(sequelize);
@@ -51,6 +52,7 @@ module.exports = {
   ProductWeight,
   ProductTag,
   ProductFlavour,
+  Permission,
 
 
   UserOtp,

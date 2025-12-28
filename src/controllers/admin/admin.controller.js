@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const { Admin } = require("../../models");
-const { Permission } = require("../models");
+const { Permission } = require("../../models");
 const { generateToken, extractToken } = require("../../config/jwt");
 const { Users, Permissions} = require("../../config/permission");
 

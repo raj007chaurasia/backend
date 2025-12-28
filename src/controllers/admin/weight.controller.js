@@ -1,4 +1,4 @@
-const { Weight } = require("../models");
+const { Weight } = require("../../models");
 
 /**
  * GET ALL WEIGHTS

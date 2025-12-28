@@ -2,7 +2,7 @@ const {
   ProductWishlist,
   Product,
   ProductImage
-} = require("../models");
+} = require("../../models");
 
 /**
  * ADD TO WISHLIST

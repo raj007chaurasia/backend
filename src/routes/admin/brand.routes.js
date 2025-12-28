@@ -6,7 +6,7 @@ const {
   getBrandById,
   saveBrand,
   deleteBrand
-} = require("../controllers/brand.controller");
+} = require("../../controllers/admin/brand.controller");
 
 // ADMIN BRAND ROUTES
 router.get("/", getAllBrands);

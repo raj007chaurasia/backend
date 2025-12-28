@@ -1,4 +1,4 @@
-const { Tag } = require("../models");
+const { Tag } = require("../../models");
 
 /**
  * GET ALL TAGS (WITH PAGINATION)

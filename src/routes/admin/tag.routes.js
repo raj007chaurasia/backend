@@ -6,7 +6,7 @@ const {
   getTagById,
   saveTag,
   deleteTag
-} = require("../controllers/tag.controller");
+} = require("../../controllers/admin/tag.controller");
 
 // ADMIN TAG ROUTES
 router.get("/", getAllTags);

@@ -6,7 +6,7 @@ const {
   getFlavourById,
   saveFlavour,
   deleteFlavour
-} = require("../controllers/flavour.controller");
+} = require("../../controllers/admin/flavour.controller");
 
 // ADMIN FLAVOUR ROUTES
 router.get("/", getAllFlavours);

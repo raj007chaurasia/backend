@@ -9,7 +9,7 @@ const {
   Weight,
   Tag,
   Flavour
-} = require("../models");
+} = require("../../models");
 
 /**
  * GET ALL PRODUCTS (WITH PAGINATION)

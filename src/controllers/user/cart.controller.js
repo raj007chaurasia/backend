@@ -2,7 +2,7 @@ const {
   CartItem,
   Product,
   ProductImage
-} = require("../models");
+} = require("../../models");
 
 /**
  * ADD PRODUCT TO CART
