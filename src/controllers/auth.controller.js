@@ -22,16 +22,7 @@ exports.userLogin = async (req, res) => {
 
     const token = generateToken({ id: user.id, role: "User" });
 
-    return res.status(200).json({
-      success: true,
-      message: "User login successful",
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email
-      }
-    });
+    return res.status(200).json({ success: true, message: "User login successful", token });
 
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error", error: error.message });
@@ -57,17 +48,9 @@ exports.userRegister = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({ name, email, password: hashedPassword, mobile, });
+    await User.create({ name, email, password: hashedPassword, mobile, });
 
-    return res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email
-      }
-    });
+    return res.status(201).json({ success: true, message: "User registered successfully" });
 
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error", error: error.message });
