@@ -11,11 +11,21 @@ const {
   Flavour
 } = require("../../models");
 
+const { Products } = require("../../config/permission");
+
 /**
  * GET ALL PRODUCTS (WITH PAGINATION)
  */
 exports.getAllProducts = async (req, res) => {
   try {
+    const jwt = extractToken(req);
+    if(jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if(!Token.permissions.includes(Products))
+      return res.status(400).json({success: false, message: "you don't have permission to view product list."});
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -55,6 +65,14 @@ exports.getAllProducts = async (req, res) => {
  */
 exports.getProductById = async (req, res) => {
   try {
+    const jwt = extractToken(req);
+    if(jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if(!Token.permissions.includes(Products))
+      return res.status(400).json({success: false, message: "you don't have permission to view product."});
+
     const { id } = req.params;
 
     const product = await Product.findByPk(id, {
@@ -87,10 +105,42 @@ exports.saveProduct = async (req, res) => {
   let message = "";
 
   try {
-    const { id, name, description, information, rating, price, discountPrice, brandId, categoryId, eDietType, Qty, weights = [], tags = [], flavours = [], images = [] } = req.body;
+    const jwt = extractToken(req);
+    if(jwt.success !== true)
+      return res.status(400).json(jwt);
 
-    if (!name || !price)
-      return res.status(400).json({ success: false, message: "Product name and price are required" });
+    const Token = jwt.Token;
+    if(!Token.permissions.includes(Products))
+      return res.status(400).json({success: false, message: "you don't have permission to save product."});
+
+    const { id, name, description, information, rating, price, discountPrice, brandId, categoryId, flavourId, eDietType, qty, weight, tags = [], images = [] } = req.body;
+
+    if (!name)
+      return res.status(400).json({ success: false, message: "Product name is required" });
+
+    if (!price)
+      return res.status(400).json({ success: false, message: "price is required" });
+
+    if (!brandId)
+      return res.status(400).json({ success: false, message: "Brand is required" });
+
+    if (!categoryId)
+      return res.status(400).json({ success: false, message: "Category is required" });
+
+    if (!flavourId)
+      return res.status(400).json({ success: false, message: "Flavour is required" });
+
+    if (!weight)
+      return res.status(400).json({ success: false, message: "Weight is required" });
+
+    if (!eDietType)
+      return res.status(400).json({ success: false, message: "Diet Type is required" });
+
+    if (!qty || qty < 0)
+      return res.status(400).json({ success: false, message: "Stock Quantity is required" });
+
+    if (!images || images.length <= 0)
+      return res.status(400).json({ success: false, message: "images are required" });
 
     let product;
 
@@ -103,22 +153,23 @@ exports.saveProduct = async (req, res) => {
 
       await product.update(
         {
-          name,
-          description,
-          information,
-          rating,
-          price,
-          discountPrice,
+          name: name,
+          Description: description,
+          Information: information,
+          Rating: rating,
+          Price: price,
+          DiscountPrice: discountPrice,
           BrandId: brandId,
-          eDietType,
+          eDietType: eDietType,
           CategoryId: categoryId,
-          Qty
+          Qty: qty,
+          FlavourId: flavourId,
+          Weight: weight
         },
         { transaction: t }
       );
 
       // Remove old mappings
-      await ProductWeight.destroy({ where: { ProductId: id }, transaction: t });
       await ProductTag.destroy({ where: { ProductId: id }, transaction: t });
       await ProductFlavour.destroy({ where: { ProductId: id }, transaction: t });
 
@@ -128,16 +179,18 @@ exports.saveProduct = async (req, res) => {
       // INSERT
       product = await Product.create(
         {
-          name,
-          description,
-          information,
-          rating,
-          price,
-          discountPrice,
+          name: name,
+          Description: description,
+          Information: information,
+          Rating: rating,
+          Price: price,
+          DiscountPrice: discountPrice,
           BrandId: brandId,
-          eDietType,
+          eDietType: eDietType,
           CategoryId: categoryId,
-          Qty
+          Qty: qty,
+          FlavourId: flavourId,
+          Weight: weight
         },
         { transaction: t }
       );
@@ -145,22 +198,10 @@ exports.saveProduct = async (req, res) => {
       message = "Product created successfully";
     }
 
-    // Weights
-    if (weights.length) {
-      const weightData = weights.map(w => ({ ProductId: product.id, WeightId: w }));
-      await ProductWeight.bulkCreate(weightData, { transaction: t });
-    }
-
     // Tags
     if (tags.length) {
       const tagData = tags.map(tg => ({ ProductId: product.id, TagId: tg }));
       await ProductTag.bulkCreate(tagData, { transaction: t });
-    }
-
-    // Flavours
-    if (flavours.length) {
-      const flavourData = flavours.map(f => ({ ProductId: product.id, FlavourId: f }));
-      await ProductFlavour.bulkCreate(flavourData, { transaction: t });
     }
 
     // Images (metadata only – upload handled separately)
@@ -184,6 +225,15 @@ exports.saveProduct = async (req, res) => {
  */
 exports.deleteProduct = async (req, res) => {
   try {
+    
+    const jwt = extractToken(req);
+    if(jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if(!Token.permissions.includes(Products))
+      return res.status(400).json({success: false, message: "you don't have permission to delete product."});
+
     const { id } = req.params;
 
     const product = await Product.findByPk(id);
@@ -200,6 +250,74 @@ exports.deleteProduct = async (req, res) => {
     return res.status(200).json({ success: true, message: "Product deleted successfully" });
 
   } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * UPDATE PRODUCT STATUS (ACTIVE / DEACTIVE)
+ */
+exports.changeStatusProduct = async (req, res) => {
+  try {
+    
+    const jwt = extractToken(req);
+    if(jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if(!Token.permissions.includes(Products))
+      return res.status(400).json({success: false, message: "you don't have permission to update product."});
+
+    const { id, isActive } = req.body;
+
+    if (!id || !isActive)
+      return res.status(400).json({ success: false, message: "Product id and status are required" });
+
+    let product = await Product.findByPk(id);
+
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    await product.update({ isActive });
+
+    return res.status(200).json({ success: true, message: "Product Status Updated successfully" });
+
+  } catch (error) {
+    await t.rollback();
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * SET PRODUCT BEST SELLER
+ */
+exports.setBestSellerProduct = async (req, res) => {
+  try {
+    
+    const jwt = extractToken(req);
+    if(jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if(!Token.permissions.includes(Products))
+      return res.status(400).json({success: false, message: "you don't have permission to update product."});
+
+    const { id, isBestSeller } = req.body;
+
+    if (!id || !isBestSeller)
+      return res.status(400).json({ success: false, message: "Product id and status are required" });
+
+    let product = await Product.findByPk(id);
+
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    await product.update({ isBestSeller });
+
+    return res.status(200).json({ success: true, message: "Product Status Updated successfully" });
+
+  } catch (error) {
+    await t.rollback();
     return res.status(500).json({ success: false, message: error.message });
   }
 };

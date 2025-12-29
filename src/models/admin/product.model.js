@@ -1,4 +1,5 @@
 const { DataTypes } = require("sequelize");
+const { Weight } = require("..");
 
 module.exports = (sequelize) => {
   const Product = sequelize.define(
@@ -55,8 +56,28 @@ module.exports = (sequelize) => {
         allowNull: true
       },
 
+      FlavourId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+      },
+
+      Weight: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+
       Qty: {
         type: DataTypes.INTEGER,
+        allowNull: true
+      },
+
+      IsBestSeller: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true
+      },
+
+      IsActive: {
+        type: DataTypes.BOOLEAN,
         allowNull: true
       }
     },

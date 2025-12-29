@@ -4,5 +4,6 @@ const Brands = "brands";
 const Tags = "tags";
 const Weights = "weights";
 const Flavours = "flavours";
+const Products = "products";
 
-module.export = { Users, Permissions, Brands, Tags, Weights, Flavours};
+module.exports = { Users, Permissions, Brands, Tags, Weights, Flavours, Products};
