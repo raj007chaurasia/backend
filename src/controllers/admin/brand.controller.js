@@ -5,9 +5,21 @@ const { Brand } = require("../../models");
  */
 exports.getAllBrands = async (req, res) => {
   try {
-    const brands = await Brand.findAll({ order: [["id", "DESC"]] });
+    
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
-    return res.status(200).json({ success: true, data: brands });
+    const { rows, count } = await Brand.findAll({ limit, offset, order: [["id", "DESC"]] });
+
+    return res.status(200).json({ success: true, data: rows,
+      pagination: {
+        totalRecords: count,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        limit
+      }
+     });
 
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
