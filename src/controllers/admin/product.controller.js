@@ -12,6 +12,7 @@ const {
 } = require("../../models");
 
 const { Products } = require("../../config/permission");
+const { extractToken } = require("../../config/jwt");
 
 /**
  * GET ALL PRODUCTS (WITH PAGINATION)
@@ -80,9 +81,7 @@ exports.getProductById = async (req, res) => {
         { model: Brand },
         { model: Category },
         { model: ProductImage },
-        { model: ProductWeight, include: [Weight] },
-        { model: ProductTag, include: [Tag] },
-        { model: ProductFlavour, include: [Flavour] }
+        { model: ProductTag, include: [Tag] }
       ]
     });
 
@@ -171,7 +170,6 @@ exports.saveProduct = async (req, res) => {
 
       // Remove old mappings
       await ProductTag.destroy({ where: { ProductId: id }, transaction: t });
-      await ProductFlavour.destroy({ where: { ProductId: id }, transaction: t });
 
       message = "Product updated successfully";
 

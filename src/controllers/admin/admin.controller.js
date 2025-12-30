@@ -56,7 +56,7 @@ exports.getUserById = async (req, res) => {
     const Token = jwt.Token;
     if(!Token.permissions.includes(Users))
       return res.status(400).json({success: false, message: "you don't have permission to see user Details."});
-
+    
     const { id } = req.params;
 
     const admin = await Admin.findByPk(id, { attributes: { exclude: ["password"] } });
@@ -85,10 +85,10 @@ exports.saveUser = async (req, res) => {
       return res.status(400).json({success: false, message: "you don't have permission to save user."});
 
     const { id, firstName, lastName, email, phoneNo, username, password, isAdmin } = req.body;
-
+    
     if (!firstName || !lastName || !email || !username)
       return res.status(400).json({ success: false, message: "Required fields are missing" });
-
+    
     // UPDATE
     if (id) {
       const admin = await Admin.findByPk(id);
@@ -118,7 +118,7 @@ exports.saveUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await AdminUser.create({ firstName, lastName, email, phoneNo, username, password: hashedPassword, isAdmin: isAdmin ?? false });
+    await Admin.create({ firstName, lastName, email, phoneNo, username, password: hashedPassword, isAdmin: isAdmin ?? false, isActive: true });
 
     return res.status(201).json({ success: true, message: "user created successfully" });
 
@@ -201,10 +201,10 @@ exports.savePermissions = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid payload" });
 
     // Remove old permissions
-    await Permission.destroy({ where: { UserId } });
+    await Permission.destroy({ where: { adminUserId: UserId } });
 
     // Insert new permissions
-    const data = permissions.map(p => ({ UserId, pageKey: p.pageKey, canView: p.canView }));
+    const data = permissions.map(p => ({ adminUserId: UserId, pageKey: p.pageKey, canView: p.canView }));
 
     await Permission.bulkCreate(data);
 

@@ -1,5 +1,4 @@
 const { DataTypes } = require("sequelize");
-const { Weight } = require("..");
 
 module.exports = (sequelize) => {
   const Product = sequelize.define(
