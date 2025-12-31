@@ -9,6 +9,7 @@ const Tag = require("./admin/tag.model")(sequelize);
 const Category = require("./admin/category.model")(sequelize);
 const Flavour = require("./admin/flavour.model")(sequelize);
 const Product = require("./admin/product.model")(sequelize);
+const Settings = require("./admin/settings.model")(sequelize);
 
 const ProductImage = require("./admin/productImage.model")(sequelize);
 const ProductWeight = require("./admin/productWeight.model")(sequelize);
@@ -22,6 +23,7 @@ const ProductFlavour = require("./admin/productFlavour.model")(sequelize);
 const UserOtp = require("./user/userOtp.model")(sequelize);
 const Wishlist = require("./user/wishlist.model")(sequelize);
 const CartItem = require("./user/cartItem.model")(sequelize);
+const customerAddress = require("./user/customerAddress.model")(sequelize);
 
 // Relations
 
@@ -43,6 +45,7 @@ module.exports = {
   sequelize,
   User,
   Admin,
+  Settings,
   Brand,
   Weight,
   Tag,
@@ -58,5 +61,6 @@ module.exports = {
 
   UserOtp,
   Wishlist,
-  CartItem
+  CartItem,
+  customerAddress
 };

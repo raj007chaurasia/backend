@@ -12,11 +12,14 @@ const flavourRoutes = require("./routes/admin/flavour.routes");
 const productRoutes = require("./routes/admin/product.routes");
 const adminRoutes = require("./routes/admin/admin.routes");
 const orderRoutes = require("./routes/admin/order.routes");
+const settingsRoutes = require("./routes/admin/settings.routes");
 
 
 // const customerProductRoutes = require("./routes/user/customerProduct.routes");
+const userRoutes = require("./routes/user/user.routes");
 const wishlistRoutes = require("./routes/user/wishlist.routes");
 const cartRoutes = require("./routes/user/wishlist.routes");
+const productsRoutes = require("./routes/user/product.routes");
 
 
 
@@ -33,11 +36,14 @@ app.use("/api/admin/flavours", flavourRoutes);
 app.use("/api/admin/products", productRoutes);
 app.use("/api/admin/users", adminRoutes);
 app.use("/api/admin/orders", orderRoutes);
+app.use("/api/admin/settings", settingsRoutes);
 
 
 
 // app.use("/api/products", customerProductRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/products", productsRoutes);
+app.use("/api/user", userRoutes);
 
 module.exports = app;

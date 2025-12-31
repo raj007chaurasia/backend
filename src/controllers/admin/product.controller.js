@@ -204,7 +204,7 @@ exports.saveProduct = async (req, res) => {
 
     // Images (metadata only – upload handled separately)
     if (images.length) {
-      const imageData = images.map(img => ({ ProductId: product.id, guid: img.guid, path: img.path, eExtension: img.eExtension }));
+      const imageData = images.map(img => ({ ProductId: product.id, GUID: img.guid, Path: img.path, eExtension: img.eExtension }));
       await ProductImage.bulkCreate(imageData, { transaction: t });
     }
 
@@ -310,7 +310,7 @@ exports.setBestSellerProduct = async (req, res) => {
     if (!product)
       return res.status(404).json({ success: false, message: "Product not found" });
 
-    await product.update({ isBestSeller });
+    await product.update({ IsBestSeller: isBestSeller });
 
     return res.status(200).json({ success: true, message: "Product Status Updated successfully" });
 
