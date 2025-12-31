@@ -10,9 +10,11 @@ exports.getAllBrands = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    const { rows, count } = await Brand.findAll({ limit, offset, order: [["id", "DESC"]] });
+    const { rows, count } = await Brand.findAndCountAll({ limit, offset, order: [["id", "DESC"]] });
 
-    return res.status(200).json({ success: true, data: rows,
+    return res.status(200).json({ 
+      success: true, 
+      data: rows,
       pagination: {
         totalRecords: count,
         currentPage: page,
