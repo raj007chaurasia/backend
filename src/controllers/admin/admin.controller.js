@@ -3,6 +3,7 @@ const { Admin } = require("../../models");
 const { Permission } = require("../../models");
 const { generateToken, extractToken } = require("../../config/jwt");
 const { Users, Permissions} = require("../../config/permission");
+const { where, Model } = require("sequelize");
 
 /**
  * GET ALL USERS (WITH PAGINATION)
@@ -33,9 +34,7 @@ exports.getAllUsers = async (req, res) => {
       data: rows,
       pagination: {
         totalRecords: count,
-        currentPage: page,
         totalPages: Math.ceil(count / limit),
-        limit
       }
     });
 
@@ -64,7 +63,7 @@ exports.getUserById = async (req, res) => {
     if (!admin)
       return res.status(404).json({ success: false, message: "user not found" });
 
-    return res.status(200).json({ success: true, data: admin });
+    return res.status(200).json({ success: true, message: "Users Get Successfully.", data: admin });
 
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -160,7 +159,7 @@ exports.toggleUserStatus = async (req, res) => {
 /**
  * GET PERMISSIONS BY USER ID
  */
-exports.getPermissionsByUserId = async (req, res) => {
+exports.getPermissions = async (req, res) => {
   try {
     const jwt = extractToken(req);
     if(jwt.success !== true)
@@ -169,12 +168,20 @@ exports.getPermissionsByUserId = async (req, res) => {
     const Token = jwt.Token;
     if(!Token.permissions.includes(Permissions))
       return res.status(400).json({success: false, message: "you don't have permission to see user permissions."});
+    
+    const permissions = await Admin.findAll({ 
+      where: { isActive: true}, 
+      attributes: ["id", "firstName", "lastName"],
+      include: [
+        { 
+          model: Permission,
+          as: "permissions",
+          attributes: ["pageKey", "canView"]
+        }
+      ]
+    })
 
-    const { userId } = req.params;
-
-    const permissions = await Permission.findAll({ where: { adminUserId: userId } });
-
-    return res.status(200).json({ success: true, data: permissions });
+    return res.status(200).json({ success: true, message: "Permission Get Successfully.", data: permissions });
 
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -214,7 +221,6 @@ exports.savePermissions = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 /**
  * ADMIN LOGIN

@@ -70,6 +70,11 @@ module.exports = (sequelize) => {
         allowNull: true
       },
 
+      MinQty: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+      },
+
       IsBestSeller: {
         type: DataTypes.BOOLEAN,
         allowNull: true

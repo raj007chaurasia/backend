@@ -6,16 +6,16 @@ const {
   getUserById,
   saveUser,
   toggleUserStatus,
-  getPermissionsByUserId,
+  getPermissions,
   savePermissions
 } = require("../../controllers/admin/admin.controller");
 
 // ADMIN USER ROUTES
-router.get("/", getAllUsers);
-router.get("/:id", getUserById);
-router.post("/save", saveUser);
-router.patch("/changeStatus:id", toggleUserStatus);
-router.get("/permission/get:userId", getPermissionsByUserId);
+router.patch("/changeStatus/:id", toggleUserStatus);
 router.post("/permission/save", savePermissions);
+router.get("/permission", getPermissions);
+router.post("/save", saveUser);
+router.get("/:id", getUserById);
+router.get("/", getAllUsers);
 
 module.exports = router;

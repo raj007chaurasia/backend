@@ -77,16 +77,10 @@ exports.getAddressById = async (req, res) => {
     const userId = Token.id;
     const { id } = req.params;
 
-    const address = await CustomerAddress.findOne({
-      where: { id, userId }
-    });
+    const address = await CustomerAddress.findOne({ where: { id, userId } });
 
-    if (!address) {
-      return res.status(404).json({
-        success: false,
-        message: "Address not found"
-      });
-    }
+    if (!address)
+      return res.status(404).json({ success: false, message: "Address not found" });
 
     res.json({ success: true, data: address });
   } catch (err) {

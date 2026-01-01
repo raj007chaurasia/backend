@@ -39,7 +39,8 @@ ProductWeight.belongsTo(Weight, { foreignKey: "WeightId" });
 ProductTag.belongsTo(Tag, { foreignKey: "TagId" });
 ProductFlavour.belongsTo(Flavour, { foreignKey: "FlavourId" });
 
-
+Permission.belongsTo(Admin, { foreignKey: "adminUserId" });
+Admin.hasMany(Permission, { foreignKey: "adminUserId", as: "permissions" });
 
 module.exports = {
   sequelize,
