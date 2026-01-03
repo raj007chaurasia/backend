@@ -13,6 +13,7 @@ const productRoutes = require("./routes/admin/product.routes");
 const adminRoutes = require("./routes/admin/admin.routes");
 const orderRoutes = require("./routes/admin/order.routes");
 const settingsRoutes = require("./routes/admin/settings.routes");
+const dashboardRoutes = require("./routes/admin/dashboard.routes");
 
 
 // const customerProductRoutes = require("./routes/user/customerProduct.routes");
@@ -28,15 +29,16 @@ app.use(express.json());
 app.use("/uploads", express.static("src/uploads"));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin/users", adminRoutes);
 app.use("/api/admin/brands", brandRoutes);
 app.use("/api/admin/weights", weightRoutes);
 app.use("/api/admin/tags", tagRoutes);
 app.use("/api/admin/categories", categoryRoutes);
 app.use("/api/admin/flavours", flavourRoutes);
 app.use("/api/admin/products", productRoutes);
-app.use("/api/admin/users", adminRoutes);
 app.use("/api/admin/orders", orderRoutes);
 app.use("/api/admin/settings", settingsRoutes);
+app.use("/api/admin/dashboard", dashboardRoutes);
 
 
 

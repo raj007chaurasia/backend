@@ -74,7 +74,7 @@ exports.sendOtp = async (req, res) => {
   // 🔴 WhatsApp API Integration Placeholder
   console.log(`Send OTP ${otp} to WhatsApp ${phoneNo}`);
 
-  return res.status(200).json({ success: true, message: "OTP sent successfully" });
+  return res.status(200).json({ success: true, message: "OTP sent successfully", otp });
 };
 
 /**

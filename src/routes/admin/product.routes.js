@@ -9,7 +9,9 @@ const {
   saveProduct,
   deleteProduct,
   changeStatusProduct,
-  setBestSellerProduct
+  setBestSellerProduct,
+  getLowStockProducts,
+  updateProductStock
 } = require("../../controllers/admin/product.controller");
 
 // ADMIN PRODUCT ROUTES
@@ -19,5 +21,7 @@ router.post("/save", upload.array("images", 10), saveProduct);
 router.delete("/:id", deleteProduct);
 router.post("/changeStatus", changeStatusProduct);
 router.post("/setBestSeller", setBestSellerProduct);
+router.get("/low-stock", getLowStockProducts);
+router.patch("/:id/stock", updateProductStock);
 
 module.exports = router;
