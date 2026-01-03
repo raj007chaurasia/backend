@@ -114,6 +114,9 @@ exports.saveProduct = async (req, res) => {
 
     const { id, name, description, information, rating, price, discountPrice, brandId, categoryId, flavourId, eDietType, qty, weight, tags = [], images = [] } = req.body;
 
+    const uploadedFiles = Array.isArray(req.files) ? req.files : [];
+    const imagesFromBody = Array.isArray(images) ? images : [];
+
     if (!name)
       return res.status(400).json({ success: false, message: "Product name is required" });
 
@@ -138,7 +141,7 @@ exports.saveProduct = async (req, res) => {
     if (!qty || qty < 0)
       return res.status(400).json({ success: false, message: "Stock Quantity is required" });
 
-    if (!images || images.length <= 0)
+    if (uploadedFiles.length === 0 && imagesFromBody.length === 0)
       return res.status(400).json({ success: false, message: "images are required" });
 
     let product;
@@ -202,9 +205,22 @@ exports.saveProduct = async (req, res) => {
       await ProductTag.bulkCreate(tagData, { transaction: t });
     }
 
-    // Images (metadata only – upload handled separately)
-    if (images.length) {
-      const imageData = images.map(img => ({ ProductId: product.id, GUID: img.guid, Path: img.path, eExtension: img.eExtension }));
+    // Images (supports multipart uploads and legacy JSON metadata)
+    if (uploadedFiles.length) {
+      const imageData = uploadedFiles.map(file => ({
+        ProductId: product.id,
+        GUID: file.filename,
+        Path: `/uploads/products/${file.filename}`,
+        eExtension: null
+      }));
+      await ProductImage.bulkCreate(imageData, { transaction: t });
+    } else if (imagesFromBody.length) {
+      const imageData = imagesFromBody.map(img => ({
+        ProductId: product.id,
+        GUID: img.guid,
+        Path: img.path,
+        eExtension: img.eExtension
+      }));
       await ProductImage.bulkCreate(imageData, { transaction: t });
     }
 

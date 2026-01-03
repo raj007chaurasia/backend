@@ -14,8 +14,9 @@ const {
 router.get("/", getAllUsers);
 router.get("/:id", getUserById);
 router.post("/save", saveUser);
-router.patch("/changeStatus:id", toggleUserStatus);
-router.get("/permission/get:userId", getPermissionsByUserId);
+router.patch("/changeStatus/:id", toggleUserStatus);
+router.get("/permission/get/:userId", getPermissionsByUserId);
 router.post("/permission/save", savePermissions);
+router.post("/permission/save/:userId", savePermissions);
 
 module.exports = router;

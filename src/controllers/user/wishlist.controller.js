@@ -67,7 +67,7 @@ exports.getWishlist = async (req, res) => {
           include: [
             {
               model: ProductImage,
-              attributes: ["path"],
+              attributes: ["Path"],
               limit: 1
             }
           ]
@@ -80,7 +80,7 @@ exports.getWishlist = async (req, res) => {
       productId: item.Product.id,
       productName: item.Product.name,
       price: item.Product.price,
-      image: item.Product.ProductImages?.[0]?.path || null
+      image: item.Product.ProductImages?.[0]?.Path || null
     }));
 
     return res.status(200).json({ success: true, data });

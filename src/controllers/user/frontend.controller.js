@@ -57,7 +57,7 @@ exports.getProducts = async (req, res) => {
     }
 
     // 🖼️ Product Image (1 image only)
-    include.push({ model: ProductImage, attributes: ["path"], limit: 1 });
+    include.push({ model: ProductImage, attributes: ["Path"], limit: 1 });
 
     const { rows, count } = await Product.findAndCountAll({
       where: whereCondition,
@@ -73,7 +73,7 @@ exports.getProducts = async (req, res) => {
       id: p.id,
       name: p.name,
       price: p.price,
-      image: p.ProductImages?.[0]?.path || null
+      image: p.ProductImages?.[0]?.Path || null
     }));
 
     return res.status(200).json({
@@ -103,7 +103,7 @@ exports.getProductDetails = async (req, res) => {
       include: [
         {
           model: ProductImage,
-          attributes: ["id", "path"]
+          attributes: ["id", "Path"]
         },
         {
           model: Brand,
@@ -137,7 +137,7 @@ exports.getProductDetails = async (req, res) => {
         price: product.price,
         dietType: product.eDietType,
         brand: product.Brand,
-        images: product.ProductImages.map(img => img.path),
+        images: product.ProductImages.map(img => img.Path),
         weights: product.ProductWeights.map(w => w.Weight),
         tags: product.ProductTags.map(t => t.Tag),
         flavours: product.ProductFlavours.map(f => f.Flavour)
