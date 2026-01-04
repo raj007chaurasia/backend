@@ -21,9 +21,9 @@ const ProductFlavour = require("./admin/productFlavour.model")(sequelize);
 // User
 
 const UserOtp = require("./user/userOtp.model")(sequelize);
-const Wishlist = require("./user/wishlist.model")(sequelize);
+const ProductWishlist = require("./user/wishlist.model")(sequelize);
 const CartItem = require("./user/cartItem.model")(sequelize);
-const customerAddress = require("./user/customerAddress.model")(sequelize);
+const CustomerAddress = require("./user/customerAddress.model")(sequelize);
 
 // Relations
 
@@ -34,6 +34,16 @@ Product.hasMany(ProductImage, { foreignKey: "ProductId" });
 Product.hasMany(ProductWeight, { foreignKey: "ProductId" });
 Product.hasMany(ProductTag, { foreignKey: "ProductId" });
 Product.hasMany(ProductFlavour, { foreignKey: "ProductId" });
+
+// Wishlist relations (for includes)
+ProductWishlist.belongsTo(User, { foreignKey: "userId" });
+ProductWishlist.belongsTo(Product, { foreignKey: "productId" });
+Product.hasMany(ProductWishlist, { foreignKey: "productId" });
+
+// Cart relations (for includes)
+CartItem.belongsTo(User, { foreignKey: "userId" });
+CartItem.belongsTo(Product, { foreignKey: "productId" });
+Product.hasMany(CartItem, { foreignKey: "productId" });
 
 ProductWeight.belongsTo(Weight, { foreignKey: "WeightId" });
 ProductTag.belongsTo(Tag, { foreignKey: "TagId" });
@@ -61,7 +71,9 @@ module.exports = {
 
 
   UserOtp,
-  Wishlist,
+  // Export both names for compatibility
+  Wishlist: ProductWishlist,
+  ProductWishlist,
   CartItem,
-  customerAddress
+  CustomerAddress
 };

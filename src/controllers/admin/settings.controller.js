@@ -5,7 +5,11 @@ const { Settings } = require("../../models");
  */
 exports.saveGeneralSettings = async (req, res) => {
   try {
-    const { logo, contactNo, email, address, openingTime, closingTime, facebook, instagram, youtube, linkedin } = req.body;
+    const { contactNo, email, address, openingTime, closingTime, facebook, instagram, youtube, linkedin } = req.body;
+
+    // If sent as multipart/form-data, multer will populate req.file.
+    // Otherwise allow passing a logo URL/path in req.body.logo for backward compatibility.
+    const logo = req.file ? `/uploads/settings/${req.file.filename}` : req.body.logo;
 
     const existing = await Settings.findOne();
 

@@ -41,7 +41,7 @@ exports.getBestSellerProducts = async (req, res) => {
  */
 exports.getCategories = async (req, res) => {
   try {
-    const data = await Category.findAll({ order: [["name", "ASC"]] });
+    const data = await Category.findAll({ order: [["category", "ASC"]] });
 
     res.json({ success: true, data });
   } catch (err) {
@@ -54,7 +54,7 @@ exports.getCategories = async (req, res) => {
  */
 exports.getWeights = async (req, res) => {
   try {
-    const data = await Weight.findAll({ order: [["value", "ASC"]] });
+    const data = await Weight.findAll({ order: [["weight", "ASC"]] });
 
     res.json({ success: true, data });
   } catch (err) {
@@ -67,7 +67,7 @@ exports.getWeights = async (req, res) => {
  */
 exports.getTags = async (req, res) => {
   try {
-    const data = await Tag.findAll({ order: [["name", "ASC"]] });
+    const data = await Tag.findAll({ order: [["tag", "ASC"]] });
 
     res.json({ success: true, data });
   } catch (err) {
@@ -102,7 +102,7 @@ exports.getMinMaxPrice = async (req, res) => {
  */
 exports.getBrands = async (req, res) => {
   try {
-    const data = await Brand.findAll({ order: [["name", "ASC"]] });
+    const data = await Brand.findAll({ order: [["brand", "ASC"]] });
 
     res.json({ success: true, data });
   } catch (err) {
@@ -115,7 +115,7 @@ exports.getBrands = async (req, res) => {
  */
 exports.getFlavours = async (req, res) => {
   try {
-    const data = await Flavour.findAll({ order: [["name", "ASC"]] });
+    const data = await Flavour.findAll({ order: [["flavour", "ASC"]] });
 
     res.json({ success: true, data });
   } catch (err) {

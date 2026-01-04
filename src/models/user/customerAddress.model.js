@@ -2,6 +2,10 @@ const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   const CustomerAddress = sequelize.define("CustomerAddress", {
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
     title: {
       type: DataTypes.STRING,
       allowNull: false

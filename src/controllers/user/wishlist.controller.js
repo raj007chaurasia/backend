@@ -4,23 +4,33 @@ const {
   ProductImage
 } = require("../../models");
 
+const { extractToken } = require("../../config/jwt");
+
 /**
  * ADD TO WISHLIST
  */
 exports.addToWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { productId } = req.body;
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.id)
+      return res.status(400).json({ success: false, message: "Invalid User Token." });
+
+    const userId = Token.id;
+    const productId = req.params.productId || req.body.productId;
 
     if (!productId)
       return res.status(400).json({ success: false, message: "ProductId is required" });
 
-    const exists = await ProductWishlist.findOne({ where: { UserId: userId, ProductId: productId } });
+    const exists = await ProductWishlist.findOne({ where: { userId, productId } });
 
     if (exists)
       return res.status(200).json({ success: true, message: "Product already in wishlist" });
 
-    await ProductWishlist.create({ UserId: userId, ProductId: productId });
+    await ProductWishlist.create({ userId, productId });
 
     return res.status(201).json({ success: true, message: "Product added to wishlist" });
 
@@ -34,13 +44,21 @@ exports.addToWishlist = async (req, res) => {
  */
 exports.removeFromWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.id)
+      return res.status(400).json({ success: false, message: "Invalid User Token." });
+
+    const userId = Token.id;
     const { productId } = req.params;
 
     await ProductWishlist.destroy({
       where: {
-        UserId: userId,
-        ProductId: productId
+        userId,
+        productId
       }
     });
 
@@ -56,10 +74,18 @@ exports.removeFromWishlist = async (req, res) => {
  */
 exports.getWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.id)
+      return res.status(400).json({ success: false, message: "Invalid User Token." });
+
+    const userId = Token.id;
 
     const wishlist = await ProductWishlist.findAll({
-      where: { UserId: userId },
+      where: { userId },
       include: [
         {
           model: Product,
@@ -73,7 +99,7 @@ exports.getWishlist = async (req, res) => {
           ]
         }
       ],
-      order: [["WishlistId", "DESC"]]
+      order: [["id", "DESC"]]
     });
 
     const data = wishlist.map(item => ({

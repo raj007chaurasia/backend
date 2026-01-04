@@ -2,6 +2,7 @@ const orderService = require("../../services/order.service");
 const { Order, OrderItem, Product, Brand } = require("../../models");
 const { Orders } = require("../../config/permission");
 const { Op, fn, col, literal } = require("sequelize");
+const { extractToken } = require("../../config/jwt");
 
 /**
  * GET ALL ORDERS (ADMIN)
@@ -74,6 +75,7 @@ exports.updateOrderStatus = async (req, res) => {
 exports.placeOrder = async (req, res) => {
   try {
     const jwt = extractToken(req);
+  
     if(jwt.success !== true)
       return res.status(400).json(jwt);
 

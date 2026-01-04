@@ -4,12 +4,22 @@ const {
   ProductImage
 } = require("../../models");
 
+const { extractToken } = require("../../config/jwt");
+
 /**
  * ADD PRODUCT TO CART
  */
 exports.addToCart = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.id)
+      return res.status(400).json({ success: false, message: "Invalid User Token." });
+
+    const userId = Token.id;
     const { productId } = req.body;
 
     if (!productId)
@@ -18,15 +28,15 @@ exports.addToCart = async (req, res) => {
     // Prevent duplicate cart item
     const exists = await CartItem.findOne({
       where: {
-        userId: userId,
-        ProductId: productId
+        userId,
+        productId
       }
     });
 
     if (exists)
       return res.status(200).json({ success: true, message: "Product already in cart" });
 
-    await CartItem.create({ userId: userId, ProductId: productId });
+    await CartItem.create({ userId, productId });
 
     return res.status(201).json({ success: true, message: "Product added to cart" });
 
@@ -40,13 +50,21 @@ exports.addToCart = async (req, res) => {
  */
 exports.removeFromCart = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.id)
+      return res.status(400).json({ success: false, message: "Invalid User Token." });
+
+    const userId = Token.id;
     const { productId } = req.params;
 
     await CartItem.destroy({
       where: {
-        userId: userId,
-        ProductId: productId
+        userId,
+        productId
       }
     });
 
@@ -62,10 +80,18 @@ exports.removeFromCart = async (req, res) => {
  */
 exports.getCartItems = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.id)
+      return res.status(400).json({ success: false, message: "Invalid User Token." });
+
+    const userId = Token.id;
 
     const cartItems = await CartItem.findAll({
-      where: { userId: userId },
+      where: { userId },
       include: [
         {
           model: Product,
@@ -79,7 +105,7 @@ exports.getCartItems = async (req, res) => {
           ]
         }
       ],
-      order: [["CartId", "DESC"]]
+      order: [["id", "DESC"]]
     });
 
     const data = cartItems.map(item => ({

@@ -19,7 +19,7 @@ const dashboardRoutes = require("./routes/admin/dashboard.routes");
 // const customerProductRoutes = require("./routes/user/customerProduct.routes");
 const userRoutes = require("./routes/user/user.routes");
 const wishlistRoutes = require("./routes/user/wishlist.routes");
-const cartRoutes = require("./routes/user/wishlist.routes");
+const cartRoutes = require("./routes/user/cart.routes");
 const productsRoutes = require("./routes/user/product.routes");
 
 
