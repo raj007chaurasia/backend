@@ -9,6 +9,8 @@ const Tag = require("./admin/tag.model")(sequelize);
 const Category = require("./admin/category.model")(sequelize);
 const Flavour = require("./admin/flavour.model")(sequelize);
 const Product = require("./admin/product.model")(sequelize);
+const Order = require("./admin/order.model")(sequelize);
+const OrderItem = require("./admin/orderItem.model")(sequelize);
 const Settings = require("./admin/settings.model")(sequelize);
 
 const ProductImage = require("./admin/productImage.model")(sequelize);
@@ -68,6 +70,8 @@ module.exports = {
   ProductTag,
   ProductFlavour,
   Permission,
+  Order,
+  OrderItem,
 
 
   UserOtp,

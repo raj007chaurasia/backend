@@ -16,7 +16,7 @@ exports.createOrder = async ({ customerId, items, transactionId }) => {
   }
 
   const order = await Order.create({
-    OrderNo: `ORD-${Date.now()}`,
+    OrderNo: `${Date.now()}`,
     OrderDate: new Date(),
     CustomerId: customerId,
     Amount: totalAmount,
