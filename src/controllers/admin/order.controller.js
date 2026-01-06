@@ -1,4 +1,5 @@
 const orderService = require("../../services/order.service");
+const Sequelize = require("../../config/db");
 const { Order, OrderItem, Product, Brand } = require("../../models");
 const { Orders } = require("../../config/permission");
 const { Op, fn, col, literal } = require("sequelize");

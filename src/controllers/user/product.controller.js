@@ -1,3 +1,4 @@
+const Sequelize = require("../../config/db");
 const { Product, ProductImage, Category, Weight, Tag, Brand, Flavour } = require("../../models");
 
 exports.getBestSellerProducts = async (req, res) => {
@@ -45,7 +46,7 @@ exports.getCategories = async (req, res) => {
 
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Internal Server Error !!" });
   }
 };
 
@@ -58,7 +59,7 @@ exports.getWeights = async (req, res) => {
 
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Internal Server Error !!" });
   }
 };
 
@@ -71,7 +72,7 @@ exports.getTags = async (req, res) => {
 
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Internal Server Error !!" });
   }
 };
 
@@ -93,7 +94,7 @@ exports.getMinMaxPrice = async (req, res) => {
       maxPrice: result.get("maxPrice") || 0
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Internal Server Error !!" });
   }
 };
 
@@ -106,7 +107,7 @@ exports.getBrands = async (req, res) => {
 
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Internal Server Error !!" });
   }
 };
 
@@ -119,6 +120,6 @@ exports.getFlavours = async (req, res) => {
 
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Internal Server Error !!" });
   }
 };
