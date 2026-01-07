@@ -14,7 +14,7 @@ const {
 const Sequelize = require("../../config/db");
 const { Products } = require("../../config/permission");
 const { extractToken } = require("../../config/jwt");
-const { where } = require("sequelize");
+const { where, Op, col } = require("sequelize");
 
 /**
  * GET ALL PRODUCTS (WITH PAGINATION)

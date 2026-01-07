@@ -141,9 +141,9 @@ exports.getPendingProductQty = async (req, res) => {
         isPacked: false
       },
       attributes: [
-        "productId",
-        [fn("SUM", col("qty")), "remainingQty"],
-        [fn("COUNT", fn("DISTINCT", col("orderId"))), "totalOrders"]
+        "ItemId",
+        [fn("SUM", col("OrderItem.Qty")), "remainingQty"],
+        [fn("COUNT", fn("DISTINCT", col("OrderItem.OrderId"))), "totalOrders"]
       ],
       include: [
         {
@@ -152,13 +152,13 @@ exports.getPendingProductQty = async (req, res) => {
           include: [
             {
               model: Brand,
-              attributes: ["name"]
+              attributes: ["brand"]
             }
           ]
         }
       ],
       group: [
-        "OrderItem.productId",
+        "OrderItem.ItemId",
         "Product.id",
         "Product->Brand.id"
       ],
