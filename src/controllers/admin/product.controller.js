@@ -310,7 +310,7 @@ exports.changeStatusProduct = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Product Status Updated successfully" });
 
-  } catch (error) {
+  } catch (error) { 
     await t.rollback();
     return res.status(500).json({ success: false, message: error.message });
   }

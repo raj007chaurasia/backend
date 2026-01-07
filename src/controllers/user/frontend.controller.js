@@ -11,7 +11,7 @@ exports.getProducts = async (req, res) => {
     const limit = 12;
     const offset = (page - 1) * limit;
 
-    const whereCondition = {};
+    const whereCondition = { IsActive: true };
     const include = [];
 
     // 🔍 Search by product name
@@ -24,9 +24,9 @@ exports.getProducts = async (req, res) => {
 
     // 💰 Price filter
     if (minPrice || maxPrice) {
-      whereCondition.price = {};
-      if (minPrice) whereCondition.price[Op.gte] = minPrice;
-      if (maxPrice) whereCondition.price[Op.lte] = maxPrice;
+      whereCondition.Price = {};
+      if (minPrice) whereCondition.Price[Op.gte] = Number(minPrice);
+      if (maxPrice) whereCondition.Price[Op.lte] = Number(maxPrice);
     }
 
     // 🏷️ Tag filter
@@ -56,8 +56,8 @@ exports.getProducts = async (req, res) => {
       });
     }
 
-    // 🖼️ Product Image (1 image only)
-    include.push({ model: ProductImage, attributes: ["Path"], limit: 1 });
+    // 🖼️ Product Images
+    include.push({ model: ProductImage, attributes: ["Path"] });
 
     const { rows, count } = await Product.findAndCountAll({
       where: whereCondition,
@@ -66,13 +66,13 @@ exports.getProducts = async (req, res) => {
       limit,
       offset,
       order: [["id", "DESC"]],
-      attributes: ["id", "name", "price"]
+      attributes: ["id", "name", "Price"]
     });
 
     const products = rows.map(p => ({
       id: p.id,
       name: p.name,
-      price: p.price,
+      price: p.Price,
       image: p.ProductImages?.[0]?.Path || null
     }));
 
@@ -97,7 +97,10 @@ exports.getProducts = async (req, res) => {
  */
 exports.getProductDetails = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params?.id || req.query?.id;
+
+    if (!id)
+      return res.status(400).json({ success: false, message: "Product id is required" });
 
     const product = await Product.findByPk(id, {
       include: [
@@ -132,9 +135,9 @@ exports.getProductDetails = async (req, res) => {
       data: {
         id: product.id,
         name: product.name,
-        description: product.description,
-        rating: product.rating,
-        price: product.price,
+          description: product.Description,
+          rating: product.Rating,
+          price: product.Price,
         dietType: product.eDietType,
         brand: product.Brand,
         images: product.ProductImages.map(img => img.Path),

@@ -63,13 +63,20 @@ exports.userRegister = async (req, res) => {
 exports.sendOtp = async (req, res) => {
   const { phoneNo } = req.body;
 
-  const user = await User.findOne({ where: { phoneNo } });
+  // Map phoneNo from request to mobile column in DB
+  const user = await User.findOne({ where: { mobile: phoneNo } });
   if (!user)
     return res.status(404).json({ success: false, message: "User not found" });
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  await UserOtp.create({ userId: user.id, otp, expiresAt: new Date(Date.now() + 5 * 60 * 1000) });
+  // FIX: Explicitly set isUsed: false to avoid NULL values in DB
+  await UserOtp.create({ 
+    userId: user.id, 
+    otp, 
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    isUsed: false 
+  });
 
   // 🔴 WhatsApp API Integration Placeholder
   console.log(`Send OTP ${otp} to WhatsApp ${phoneNo}`);
@@ -83,9 +90,22 @@ exports.sendOtp = async (req, res) => {
 exports.verifyOtpAndChangePassword = async (req, res) => {
   const { phoneNo, otp, newPassword } = req.body;
 
-  const user = await User.findOne({ where: { phoneNo } });
-  if (!user)
+  console.log(`Verifying OTP for ${phoneNo} with OTP: ${otp}`);
+
+  // Map phoneNo from request to mobile column in DB
+  const user = await User.findOne({ where: { mobile: phoneNo } });
+  if (!user) {
+    console.log("User not found during OTP verification");
     return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  // Debugging: Check if any OTP exists for this user, ignoring isUsed/expiry first
+  const debugOtp = await UserOtp.findOne({ where: { userId: user.id, otp } });
+  if (debugOtp) {
+    console.log(`Found OTP record. isUsed: ${debugOtp.isUsed}, expiresAt: ${debugOtp.expiresAt}, Now: ${new Date()}`);
+  } else {
+    console.log("No OTP record found matching userId and otp string");
+  }
 
   const otpRecord = await UserOtp.findOne({
     where: {
@@ -95,14 +115,23 @@ exports.verifyOtpAndChangePassword = async (req, res) => {
     }
   });
 
-  if (!otpRecord || otpRecord.expiresAt < new Date())
-    return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+  if (!otpRecord) {
+    console.log("OTP verification failed: Record not found or already used");
+    return res.status(400).json({ success: false, message: "Invalid or used OTP" });
+  }
 
-  user.password = await bcrypt.hash(newPassword, 10);
+  if (otpRecord.expiresAt < new Date()) {
+    console.log("OTP verification failed: OTP expired");
+    return res.status(400).json({ success: false, message: "OTP has expired" });
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
   await user.save();
 
   otpRecord.isUsed = true;
   await otpRecord.save();
 
+  console.log("Password changed successfully");
   return res.status(200).json({ success: true, message: "Password changed successfully" });
 };

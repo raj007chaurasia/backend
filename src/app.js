@@ -20,6 +20,7 @@ const dashboardRoutes = require("./routes/admin/dashboard.routes");
 const userRoutes = require("./routes/user/user.routes");
 const wishlistRoutes = require("./routes/user/wishlist.routes");
 const cartRoutes = require("./routes/user/cart.routes");
+const frontendProductRoutes = require("./routes/user/frontend.routes");
 const productsRoutes = require("./routes/user/product.routes");
 
 
@@ -45,6 +46,7 @@ app.use("/api/admin/dashboard", dashboardRoutes);
 // app.use("/api/products", customerProductRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/products", frontendProductRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/user", userRoutes);
 
