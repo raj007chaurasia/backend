@@ -47,6 +47,15 @@ CartItem.belongsTo(User, { foreignKey: "userId" });
 CartItem.belongsTo(Product, { foreignKey: "productId" });
 Product.hasMany(CartItem, { foreignKey: "productId" });
 
+OrderItem.belongsTo(Product, { foreignKey: "ItemId" });
+Product.hasMany(OrderItem, { foreignKey: "ItemId" });
+
+Order.belongsTo(User, { foreignKey: "CustomerId" });
+User.hasMany(Order, { foreignKey: "CustomerId" });
+
+OrderItem.belongsTo(Order, { foreignKey: "OrderId" });
+Order.hasMany(OrderItem, { foreignKey: "OrderId" });
+
 ProductWeight.belongsTo(Weight, { foreignKey: "WeightId" });
 ProductTag.belongsTo(Tag, { foreignKey: "TagId" });
 ProductFlavour.belongsTo(Flavour, { foreignKey: "FlavourId" });

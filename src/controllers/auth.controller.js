@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const { User, UserOtp } = require("../models");
 const { generateToken } = require("../config/jwt");
+const { where } = require("sequelize");
 
 /**
  * USER LOGIN

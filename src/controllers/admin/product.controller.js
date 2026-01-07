@@ -11,6 +11,7 @@ const {
   Flavour
 } = require("../../models");
 
+const Sequelize = require("../../config/db");
 const { Products } = require("../../config/permission");
 const { extractToken } = require("../../config/jwt");
 const { where } = require("sequelize");

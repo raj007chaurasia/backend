@@ -1,4 +1,5 @@
-const { Order, Category, Product, User } = require("../../models");
+const { Order, OrderItem, Category, Product, User, Brand, ProductImage } = require("../../models");
+const Sequelize = require("../../config/db");
 
 /**
  * DASHBOARD SUMMARY COUNTS
@@ -82,14 +83,14 @@ exports.getTopCustomers = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["name", "phoneNo"]
+          attributes: ["name", "mobile"]
         }
       ]
     });
 
     const data = customers.map(c => ({
       customerName: c.User.name,
-      phone: c.User.phoneNo,
+      phone: c.User.mobile,
       orderCounts: parseInt(c.get("orderCount")),
       orderAmount: parseFloat(c.get("totalAmount"))
     }));
