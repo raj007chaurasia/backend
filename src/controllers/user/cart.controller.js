@@ -20,10 +20,12 @@ exports.addToCart = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid User Token." });
 
     const userId = Token.id;
-    const { productId } = req.body;
+    const { productId, quantity } = req.body;
 
     if (!productId)
       return res.status(400).json({ success: false, message: "ProductId is required" });
+
+    const qty = quantity ? Number(quantity) : 1;
 
     // Prevent duplicate cart item
     const exists = await CartItem.findOne({
@@ -33,10 +35,13 @@ exports.addToCart = async (req, res) => {
       }
     });
 
-    if (exists)
-      return res.status(200).json({ success: true, message: "Product already in cart" });
+    if (exists) {
+      exists.quantity = qty;
+      await exists.save();
+      return res.status(200).json({ success: true, message: "Cart updated" });
+    }
 
-    await CartItem.create({ userId, productId });
+    await CartItem.create({ userId, productId, quantity: qty });
 
     return res.status(201).json({ success: true, message: "Product added to cart" });
 
@@ -95,12 +100,12 @@ exports.getCartItems = async (req, res) => {
       include: [
         {
           model: Product,
-          attributes: ["id", "name", "price"],
+          required: true,
+          attributes: ["id", "name", "Price"],
           include: [
             {
               model: ProductImage,
-              attributes: ["Path"],
-              limit: 1
+              attributes: ["Path"]
             }
           ]
         }
@@ -108,12 +113,15 @@ exports.getCartItems = async (req, res) => {
       order: [["id", "DESC"]]
     });
 
-    const data = cartItems.map(item => ({
-      productId: item.Product.id,
-      productName: item.Product.name,
-      price: item.Product.price,
-      image: item.Product.ProductImages?.[0]?.Path || null
-    }));
+    const data = cartItems
+      .filter((item) => item?.Product)
+      .map(item => ({
+        productId: item.Product.id,
+        productName: item.Product.name,
+        price: item.Product.Price,
+        quantity: item.quantity,
+        image: item.Product.ProductImages?.[0]?.Path || null
+      }));
 
     return res.status(200).json({ success: true, data });
 

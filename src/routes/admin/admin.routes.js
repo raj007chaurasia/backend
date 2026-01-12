@@ -3,6 +3,7 @@ const router = express.Router();
 
 const {
   getAllUsers,
+  getAllCustomers,
   getUserById,
   saveUser,
   toggleUserStatus,
@@ -15,6 +16,7 @@ router.patch("/changeStatus/:id", toggleUserStatus);
 router.post("/permission/save", savePermissions);
 router.get("/permission", getPermissions);
 router.post("/save", saveUser);
+router.get("/customers", getAllCustomers);
 router.get("/:id", getUserById);
 router.get("/", getAllUsers);
 

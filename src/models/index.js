@@ -12,6 +12,7 @@ const Product = require("./admin/product.model")(sequelize);
 const Order = require("./admin/order.model")(sequelize);
 const OrderItem = require("./admin/orderItem.model")(sequelize);
 const Settings = require("./admin/settings.model")(sequelize);
+const Contact = require("./contact.model")(sequelize);
 
 const ProductImage = require("./admin/productImage.model")(sequelize);
 const ProductWeight = require("./admin/productWeight.model")(sequelize);
@@ -31,6 +32,7 @@ const CustomerAddress = require("./user/customerAddress.model")(sequelize);
 
 Product.belongsTo(Brand, { foreignKey: "BrandId" });
 Product.belongsTo(Category, { foreignKey: "CategoryId" });
+Product.belongsTo(Flavour, { foreignKey: "FlavourId" });
 
 Product.hasMany(ProductImage, { foreignKey: "ProductId" });
 Product.hasMany(ProductWeight, { foreignKey: "ProductId" });
@@ -52,6 +54,9 @@ Product.hasMany(OrderItem, { foreignKey: "ItemId" });
 
 Order.belongsTo(User, { foreignKey: "CustomerId" });
 User.hasMany(Order, { foreignKey: "CustomerId" });
+
+Order.belongsTo(CustomerAddress, { foreignKey: "AddressId" });
+CustomerAddress.hasMany(Order, { foreignKey: "AddressId" });
 
 OrderItem.belongsTo(Order, { foreignKey: "OrderId" });
 Order.hasMany(OrderItem, { foreignKey: "OrderId" });
@@ -88,5 +93,6 @@ module.exports = {
   Wishlist: ProductWishlist,
   ProductWishlist,
   CartItem,
-  CustomerAddress
+  CustomerAddress,
+  Contact
 };

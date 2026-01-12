@@ -1,9 +1,8 @@
 const bcrypt = require("bcrypt");
-const { Admin } = require("../../models");
-const { Permission } = require("../../models");
+const { Admin, User, Order, Permission } = require("../../models");
 const { generateToken, extractToken } = require("../../config/jwt");
 const { Users, Permissions} = require("../../config/permission");
-const { where, Model } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
 
 /**
  * GET ALL USERS (WITH PAGINATION)
@@ -38,6 +37,82 @@ exports.getAllUsers = async (req, res) => {
       }
     });
 
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET ALL CUSTOMERS (FOR DASHBOARD USERS PAGE)
+ * Returns app users (customers) with orders count.
+ * GET /api/admin/users/customers?page=&limit=&search=
+ */
+exports.getAllCustomers = async (req, res) => {
+  try {
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.permissions.includes(Users))
+      return res.status(400).json({ success: false, message: "you don't have permission to see users List." });
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const search = String(req.query.search ?? "").trim();
+
+    const where = {};
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { mobile: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const { rows, count } = await User.findAndCountAll({
+      where,
+      attributes: ["id", "name", "email", "mobile"],
+      limit,
+      offset,
+      order: [["id", "DESC"]],
+    });
+
+    const ids = rows.map((u) => u.id).filter(Boolean);
+    let ordersByCustomerId = {};
+    if (ids.length) {
+      const agg = await Order.findAll({
+        attributes: ["CustomerId", [fn("COUNT", col("Order.id")), "orders"]],
+        where: { CustomerId: { [Op.in]: ids } },
+        group: ["CustomerId"],
+      });
+      ordersByCustomerId = agg.reduce((acc, r) => {
+        const customerId = r.CustomerId;
+        acc[customerId] = parseInt(r.get("orders")) || 0;
+        return acc;
+      }, {});
+    }
+
+    const data = rows.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.mobile,
+      orders: ordersByCustomerId[u.id] ?? 0,
+      role: (ordersByCustomerId[u.id] ?? 0) > 0 ? "Customer" : "User",
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        totalRecords: count,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        limit,
+      },
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

@@ -65,6 +65,11 @@ module.exports = (sequelize) => {
         allowNull: true
       },
 
+      PacketsPerJar: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+      },
+
       Qty: {
         type: DataTypes.INTEGER,
         allowNull: true

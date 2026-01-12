@@ -14,6 +14,7 @@ const adminRoutes = require("./routes/admin/admin.routes");
 const orderRoutes = require("./routes/admin/order.routes");
 const settingsRoutes = require("./routes/admin/settings.routes");
 const dashboardRoutes = require("./routes/admin/dashboard.routes");
+const contactRoutes = require("./routes/contact.routes");
 
 
 // const customerProductRoutes = require("./routes/user/customerProduct.routes");
@@ -40,6 +41,7 @@ app.use("/api/admin/products", productRoutes);
 app.use("/api/admin/orders", orderRoutes);
 app.use("/api/admin/settings", settingsRoutes);
 app.use("/api/admin/dashboard", dashboardRoutes);
+app.use("/api/contact", contactRoutes);
 
 
 

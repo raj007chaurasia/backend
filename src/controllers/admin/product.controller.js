@@ -14,7 +14,66 @@ const {
 const Sequelize = require("../../config/db");
 const { Products } = require("../../config/permission");
 const { extractToken } = require("../../config/jwt");
-const { where } = require("sequelize");
+const { where, Op, col } = require("sequelize");
+
+const parseJsonMaybe = (value) => {
+  if (value == null) return null;
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return null;
+  }
+};
+
+const normalizeIdArray = (value) => {
+  if (value == null) return [];
+
+  // When multipart/form-data is used, arrays often arrive as strings.
+  // Support JSON array ("[1,2]") or CSV ("1,2").
+  let raw = value;
+  if (typeof raw === "string") {
+    const parsed = parseJsonMaybe(raw);
+    raw = parsed != null ? parsed : raw;
+  }
+
+  const arr = Array.isArray(raw) ? raw : typeof raw === "string" ? raw.split(",") : [];
+  return [...new Set(
+    arr
+      .map((x) => Number(String(x).trim()))
+      .filter((n) => Number.isFinite(n))
+  )];
+};
+
+const normalizeBoolean = (value) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const v = value.trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(v)) return true;
+    if (["false", "0", "no", "off"].includes(v)) return false;
+  }
+  return null;
+};
+
+const normalizeDietType = (value) => {
+  if (value == null) return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const str = String(value).trim();
+  if (!str) return null;
+  const asNum = Number(str);
+  if (Number.isFinite(asNum) && str !== "") return asNum;
+  const map = {
+    VEG: 1,
+    NON_VEG: 2,
+    VEGAN: 3,
+    SUGARFREE: 4,
+    GLUTENFREE: 5
+  };
+  return map[str.toUpperCase()] ?? null;
+};
 
 /**
  * GET ALL PRODUCTS (WITH PAGINATION)
@@ -29,7 +88,9 @@ exports.getAllProducts = async (req, res) => {
     if (!Token.permissions.includes(Products))
       return res.status(400).json({ success: false, message: "you don't have permission to view product list." });
 
-    const { categoryId, brandId, page = 1, limit = 10 } = req.query;
+    const { categoryId, brandId, search } = req.query;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit, 10) || 10);
     const offset = (page - 1) * limit;
 
     const whereCondition = {};
@@ -39,6 +100,10 @@ exports.getAllProducts = async (req, res) => {
 
     if (brandId)
       whereCondition.BrandId = brandId;
+
+    if (search) {
+      whereCondition.name = { [Op.like]: `%${String(search).trim()}%` };
+    }
 
     const { rows, count } = await Product.findAndCountAll({
       limit,
@@ -122,39 +187,69 @@ exports.saveProduct = async (req, res) => {
     if (!Token.permissions.includes(Products))
       return res.status(400).json({ success: false, message: "you don't have permission to save product." });
 
-    const { id, name, description, information, rating, price, discountPrice, brandId, categoryId, flavourId, eDietType, qty, weight,minQty, tags = [], images = [] } = req.body;
+    const { id, name, description, information, rating, price, discountPrice, brandId, categoryId, flavourId, eDietType, qty, weight, packetsPerJar, minQty, tags = [], images = [] } = req.body;
 
     const uploadedFiles = Array.isArray(req.files) ? req.files : [];
-    const imagesFromBody = Array.isArray(images) ? images : [];
+
+    const normalizedTags = normalizeIdArray(tags);
+    const imagesFromBodyParsed = typeof images === "string" ? (parseJsonMaybe(images) ?? []) : images;
+    const imagesFromBody = Array.isArray(imagesFromBodyParsed) ? imagesFromBodyParsed : [];
+
+    const normalizedDietType = normalizeDietType(eDietType);
+
+    const normalizedPrice = Number(price);
+    const normalizedDiscountPrice = discountPrice != null && String(discountPrice).trim() !== "" ? Number(discountPrice) : null;
+    const normalizedBrandId = Number(brandId);
+    const normalizedCategoryId = Number(categoryId);
+    const normalizedFlavourId = Number(flavourId);
+    const normalizedQty = Number(qty);
+    const normalizedMinQty = Number(minQty);
+    const normalizedWeight = weight;
+    const normalizedPacketsPerJar = packetsPerJar ? Number(packetsPerJar) : null;
+    const normalizedRating = rating != null && String(rating).trim() !== "" ? Number(rating) : null;
 
     if (!name)
       return res.status(400).json({ success: false, message: "Product name is required" });
 
-    if (!price)
+    if (!Number.isFinite(normalizedPrice) || normalizedPrice <= 0)
       return res.status(400).json({ success: false, message: "price is required" });
 
-    if (!brandId)
+    if (!Number.isFinite(normalizedBrandId) || normalizedBrandId <= 0)
       return res.status(400).json({ success: false, message: "Brand is required" });
 
-    if (!categoryId)
+    if (!Number.isFinite(normalizedCategoryId) || normalizedCategoryId <= 0)
       return res.status(400).json({ success: false, message: "Category is required" });
 
-    if (!flavourId)
+    if (!Number.isFinite(normalizedFlavourId) || normalizedFlavourId <= 0)
       return res.status(400).json({ success: false, message: "Flavour is required" });
 
-    if (!weight)
+    // Validate relationships existence
+    const brandExists = await Brand.findByPk(normalizedBrandId);
+    if (!brandExists)
+       return res.status(400).json({ success: false, message: "Invalid Brand ID: Brand not found" });
+
+    const categoryExists = await Category.findByPk(normalizedCategoryId);
+    if (!categoryExists)
+        return res.status(400).json({ success: false, message: "Invalid Category ID: Category not found" });
+
+    const flavourExists = await Flavour.findByPk(normalizedFlavourId);
+    if (!flavourExists)
+        return res.status(400).json({ success: false, message: "Invalid Flavour ID: Flavour not found" });
+
+    if (normalizedWeight == null || String(normalizedWeight).trim() === "")
       return res.status(400).json({ success: false, message: "Weight is required" });
 
-    if (!eDietType)
+    if (normalizedDietType == null)
       return res.status(400).json({ success: false, message: "Diet Type is required" });
 
-    if (!qty || qty < 0)
+    if (!Number.isFinite(normalizedQty) || normalizedQty < 0)
       return res.status(400).json({ success: false, message: "Stock Quantity is required" });
 
-     if (!minQty || minQty <= 0)
+    if (!Number.isFinite(normalizedMinQty) || normalizedMinQty <= 0)
       return res.status(400).json({ success: false, message: "Minimum Quantity is required" });
 
-    if (uploadedFiles.length === 0 && imagesFromBody.length === 0)
+    // Images are required for new product. For update we keep existing images unless new ones are provided.
+    if (!id && uploadedFiles.length === 0 && imagesFromBody.length === 0)
       return res.status(400).json({ success: false, message: "images are required" });
 
     let product;
@@ -171,16 +266,17 @@ exports.saveProduct = async (req, res) => {
           name: name,
           Description: description,
           Information: information,
-          Rating: rating,
-          Price: price,
-          DiscountPrice: discountPrice,
-          BrandId: brandId,
-          eDietType: eDietType,
-          CategoryId: categoryId,
-          Qty: qty,
-          MinQty: minQty,
-          FlavourId: flavourId,
-          Weight: weight
+          Rating: normalizedRating,
+          Price: normalizedPrice,
+          DiscountPrice: Number.isFinite(normalizedDiscountPrice) ? normalizedDiscountPrice : null,
+          BrandId: normalizedBrandId,
+          eDietType: normalizedDietType,
+          CategoryId: normalizedCategoryId,
+          Qty: normalizedQty,
+          MinQty: normalizedMinQty,
+          FlavourId: normalizedFlavourId,
+          Weight: normalizedWeight,
+          PacketsPerJar: normalizedPacketsPerJar
         },
         { transaction: t }
       );
@@ -197,16 +293,18 @@ exports.saveProduct = async (req, res) => {
           name: name,
           Description: description,
           Information: information,
-          Rating: rating,
-          Price: price,
-          DiscountPrice: discountPrice,
-          BrandId: brandId,
-          eDietType: eDietType,
-          CategoryId: categoryId,
-          Qty: qty,
-          MinQty: minQty,
-          FlavourId: flavourId,
-          Weight: weight
+          Rating: normalizedRating,
+          Price: normalizedPrice,
+          DiscountPrice: Number.isFinite(normalizedDiscountPrice) ? normalizedDiscountPrice : null,
+          BrandId: normalizedBrandId,
+          eDietType: normalizedDietType,
+          CategoryId: normalizedCategoryId,
+          Qty: normalizedQty,
+          MinQty: normalizedMinQty,
+          FlavourId: normalizedFlavourId,
+          Weight: normalizedWeight,
+          PacketsPerJar: normalizedPacketsPerJar,
+          IsActive: true
         },
         { transaction: t }
       );
@@ -215,12 +313,17 @@ exports.saveProduct = async (req, res) => {
     }
 
     // Tags
-    if (tags.length) {
-      const tagData = tags.map(tg => ({ ProductId: product.id, TagId: tg }));
+    if (normalizedTags.length) {
+      const tagData = normalizedTags.map(tg => ({ ProductId: product.id, TagId: tg }));
       await ProductTag.bulkCreate(tagData, { transaction: t });
     }
 
     // Images (supports multipart uploads and legacy JSON metadata)
+    const shouldReplaceImages = uploadedFiles.length > 0 || imagesFromBody.length > 0;
+    if (id && shouldReplaceImages) {
+      await ProductImage.destroy({ where: { ProductId: product.id }, transaction: t });
+    }
+
     if (uploadedFiles.length) {
       const imageData = uploadedFiles.map(file => ({
         ProductId: product.id,
@@ -298,8 +401,8 @@ exports.changeStatusProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: "you don't have permission to update product." });
 
     const { id, isActive } = req.body;
-
-    if (!id || !isActive)
+    const next = normalizeBoolean(isActive);
+    if (!id || next == null)
       return res.status(400).json({ success: false, message: "Product id and status are required" });
 
     let product = await Product.findByPk(id);
@@ -307,12 +410,47 @@ exports.changeStatusProduct = async (req, res) => {
     if (!product)
       return res.status(404).json({ success: false, message: "Product not found" });
 
-    await product.update({ isActive });
+    await product.update({ IsActive: next });
 
     return res.status(200).json({ success: true, message: "Product Status Updated successfully" });
 
   } catch (error) { 
-    await t.rollback();
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * UPDATE PRODUCT STATUS (ACTIVE / DEACTIVE) BY PARAM ID
+ * PATCH /api/admin/products/:id/status
+ * body: { isActive: boolean | 0/1 | "true"/"false" }
+ */
+exports.updateProductActiveStatus = async (req, res) => {
+  try {
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.permissions.includes(Products))
+      return res.status(400).json({ success: false, message: "you don't have permission to update product." });
+
+    const { id } = req.params;
+    const next = normalizeBoolean(req.body?.isActive);
+    if (!id || next == null)
+      return res.status(400).json({ success: false, message: "Product id and status are required" });
+
+    const product = await Product.findByPk(id);
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    await product.update({ IsActive: next });
+
+    return res.status(200).json({
+      success: true,
+      message: "Product Status Updated successfully",
+      data: { id: product.id, isActive: product.IsActive },
+    });
+  } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -332,8 +470,8 @@ exports.setBestSellerProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: "you don't have permission to update product." });
 
     const { id, isBestSeller } = req.body;
-
-    if (!id || !isBestSeller)
+    const next = normalizeBoolean(isBestSeller);
+    if (!id || next == null)
       return res.status(400).json({ success: false, message: "Product id and status are required" });
 
     let product = await Product.findByPk(id);
@@ -341,12 +479,11 @@ exports.setBestSellerProduct = async (req, res) => {
     if (!product)
       return res.status(404).json({ success: false, message: "Product not found" });
 
-    await product.update({ IsBestSeller: isBestSeller });
+    await product.update({ IsBestSeller: next });
 
     return res.status(200).json({ success: true, message: "Product Status Updated successfully" });
 
   } catch (error) {
-    await t.rollback();
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -372,11 +509,12 @@ exports.getLowStockProducts = async (req, res) => {
       limit,
       offset,
       where: {
-        qty: {
+        Qty: {
           [Op.lt]: col("MinQty")
         }
       },
       attributes: [
+        "id",
         "name",
         "Qty",
         "IsActive"
@@ -395,6 +533,7 @@ exports.getLowStockProducts = async (req, res) => {
     });
 
     const response = products.map(p => ({
+      id: p.id,
       productName: p.name,
       categoryName: p.Category?.category || null,
       brandName: p.Brand?.brand || null,
@@ -436,19 +575,19 @@ exports.updateProductStock = async (req, res) => {
     if (!product)
       return res.status(404).json({ success: false, message: "Product not found" });
 
-    let newQty = product.qty;
+    let newQty = Number(product.Qty) || 0;
 
     if (action === "increase") {
       newQty += qty;
     }
     else {
-      if (product.qty < qty)
+      if ((Number(product.Qty) || 0) < qty)
         return res.status(400).json({ success: false, message: "Insufficient stock" });
 
       newQty -= qty;
     }
 
-    await product.update({ qty: newQty });
+    await product.update({ Qty: newQty });
 
     return res.status(200).json({
       success: true,

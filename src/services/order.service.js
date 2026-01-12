@@ -2,17 +2,20 @@ const {
   Order,
   OrderItem,
   Product,
+  ProductImage,
+  CustomerAddress,
   User
 } = require("../models");
 
 const { Op } = require("sequelize");
 
-exports.createOrder = async ({ customerId, items, transactionId }) => {
+exports.createOrder = async ({ customerId, items, transactionId, addressId }) => {
   let totalAmount = 0;
 
   // Calculate total
   for (const item of items) {
-    totalAmount += item.price * item.qty;
+    // Frontend sends line-total price per item: { productId, qty, price }
+    totalAmount += Number(item.price) || 0;
   }
 
   const order = await Order.create({
@@ -20,8 +23,11 @@ exports.createOrder = async ({ customerId, items, transactionId }) => {
     OrderDate: new Date(),
     CustomerId: customerId,
     Amount: totalAmount,
+    PaidAmount: 0,
+    ePaymentStatus: transactionId ? 2 : 0,
     eOrderStatus: 1,
-    TransactionId: transactionId || null
+    TransactionId: transactionId || null,
+    AddressId: addressId
   });
 
   const orderItems = items.map(i => ({
@@ -40,7 +46,29 @@ exports.createOrder = async ({ customerId, items, transactionId }) => {
 exports.getOrdersByCustomer = async (customerId) => {
   return Order.findAll({
     where: { CustomerId: customerId },
-    include: [{ model: OrderItem }],
+    include: [
+      {
+        model: CustomerAddress,
+        required: false
+      },
+      {
+        model: OrderItem,
+        include: [
+          {
+            model: Product,
+            attributes: ["id", "name", "Price"],
+            include: [
+              {
+                model: ProductImage,
+                attributes: ["Path"],
+                limit: 1,
+                separate: true
+              }
+            ]
+          }
+        ]
+      }
+    ],
     order: [["OrderDate", "DESC"]]
   });
 };
@@ -59,7 +87,7 @@ exports.getAdminOrders = async ({ page, limit, search }) => {
   const { rows, count } = await Order.findAndCountAll({
     where,
     include: [
-      { model: User, attributes: ["id", "name"] },
+      { model: User, attributes: ["id", "name", "mobile"] },
       { model: OrderItem, include: [Product] }
     ],
     limit,

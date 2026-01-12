@@ -28,6 +28,19 @@ module.exports = (sequelize) => {
       allowNull: true
     },
 
+    PaidAmount: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: 0
+    },
+
+    // 0 = Unpaid, 1 = Partially Paid, 2 = Paid
+    ePaymentStatus: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0
+    },
+
     eOrderStatus: {
       type: DataTypes.INTEGER,
       allowNull: true
@@ -35,6 +48,11 @@ module.exports = (sequelize) => {
 
     TransactionId: {
       type: DataTypes.STRING,
+      allowNull: true
+    },
+
+    AddressId: {
+      type: DataTypes.INTEGER,
       allowNull: true
     }
   }, {

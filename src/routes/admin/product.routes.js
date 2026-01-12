@@ -9,19 +9,21 @@ const {
   saveProduct,
   deleteProduct,
   changeStatusProduct,
+  updateProductActiveStatus,
   setBestSellerProduct,
   getLowStockProducts,
   updateProductStock
 } = require("../../controllers/admin/product.controller");
 
 // ADMIN PRODUCT ROUTES
-router.get("/", getAllProducts);
-router.get("/:id", getProductById);
 router.post("/save", upload.array("images", 10), saveProduct);
-router.delete("/:id", deleteProduct);
 router.post("/changeStatus", changeStatusProduct);
 router.post("/setBestSeller", setBestSellerProduct);
 router.get("/low-stock", getLowStockProducts);
 router.patch("/:id/stock", updateProductStock);
+router.patch("/:id/status", updateProductActiveStatus);
+router.get("/:id", getProductById);
+router.delete("/:id", deleteProduct);
+router.get("/", getAllProducts);
 
 module.exports = router;

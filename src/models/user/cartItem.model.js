@@ -16,6 +16,12 @@ module.exports = (sequelize) => {
     productId: {
       type: DataTypes.INTEGER,
       allowNull: true
+    },
+
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1
     }
   });
 

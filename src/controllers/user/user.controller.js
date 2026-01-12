@@ -1,6 +1,30 @@
+const bcrypt = require("bcrypt");
 const { extractToken } = require("../../config/jwt");
 const { CustomerAddress, User } = require("../../models");
 const { Op } = require("sequelize");
+
+/**
+ * GET LOGGED-IN USER DETAILS
+ */
+exports.getMe = async (req, res) => {
+  try {
+    const jwt = extractToken(req);
+    if (jwt.success !== true) return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.id) return res.status(400).json({ success: false, message: "Invalid User Token." });
+
+    const user = await User.findByPk(Token.id, {
+      attributes: ["id", "name", "email", "mobile"],
+    });
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+
+    return res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Internal Server Error !!" });
+  }
+};
 
 /**
  * Add new address
@@ -20,14 +44,14 @@ exports.saveAddress = async (req, res) => {
     const { id, title, address, city, state, country, pincode } = req.body;
 
     if (isNaN(id) || id < 0)
-      res.status(400).json({ success: false, message: "id is Invalid." });
+      return res.status(400).json({ success: false, message: "id is Invalid." });
 
     let Address;
     if (id > 0) {
       Address = await CustomerAddress.findByPk(id);
 
       if (!Address)
-        res.status(400).json({ success: false, message: "address not found." });
+        return res.status(400).json({ success: false, message: "address not found." });
 
       await Address.update({
         title: title,
@@ -38,7 +62,7 @@ exports.saveAddress = async (req, res) => {
         pincode: pincode
       })
 
-      res.status(201).json({ success: true, message: "Address added successfully" });
+      return res.status(201).json({ success: true, message: "Address added successfully" });
     }
     else {
       Address = await CustomerAddress.create({
@@ -51,7 +75,7 @@ exports.saveAddress = async (req, res) => {
         pincode: pincode
       });
 
-      res.status(201).json({ success: true, message: "Address added successfully" });
+      return res.status(201).json({ success: true, message: "Address added successfully" });
     }
   } catch (err) {
     res.status(500).json({ success: false, message: "Internal Server Error !!" });
@@ -130,36 +154,36 @@ exports.changePassword = async (req, res) => {
     const { email, oldPassword, newPassword } = req.body;
 
     if (!email)
-      res.status(400).json({ success: false, message: "Email is required." });
+      return res.status(400).json({ success: false, message: "Email is required." });
 
     if (!oldPassword)
-      res.status(400).json({ success: false, message: "Old Password is required." });
+      return res.status(400).json({ success: false, message: "Old Password is required." });
 
     if (!newPassword)
-      res.status(400).json({ success: false, message: "New Password is required." });
+      return res.status(400).json({ success: false, message: "New Password is required." });
 
-    email = email.trim();
-    oldPassword = oldPassword.trim();
-    newPassword = newPassword.trim();
+    const emailNormalized = String(email).trim();
+    const oldPasswordNormalized = String(oldPassword).trim();
+    const newPasswordNormalized = String(newPassword).trim();
 
-    if (oldPassword == newPassword)
-      res.status(400).json({ success: false, message: `New Password can not be same as Old Password.` });
+    if (oldPasswordNormalized === newPasswordNormalized)
+      return res.status(400).json({ success: false, message: "New Password can not be same as Old Password." });
 
-    var objUser = User.findByPk(userId);
+    const objUser = await User.findByPk(userId);
     if (!objUser)
-      res.status(400).json({ success: false, message: `User not found.` });
+      return res.status(400).json({ success: false, message: "User not found." });
 
-    if (objUser.email != email)
-      res.status(400).json({ success: false, message: `Invalid Email Address.` });
+    if (String(objUser.email ?? "").trim() !== emailNormalized)
+      return res.status(400).json({ success: false, message: "Invalid Email Address." });
 
-    var enc = await bcrypt.hash(oldPassword, 10);
-    if (enc !== objUser.password)
-      res.status(400).json({ success: false, message: "Invalid Old Password." });
+    const ok = await bcrypt.compare(oldPasswordNormalized, objUser.password);
+    if (!ok)
+      return res.status(400).json({ success: false, message: "Invalid Old Password." });
 
-    objUser.password = await bcrypt.hash(newPassword, 10);
+    objUser.password = await bcrypt.hash(newPasswordNormalized, 10);
     await objUser.save();
 
-    res.status(200).json({ success: true, message: "Password changed successfully." });
+    return res.status(200).json({ success: true, message: "Password changed successfully." });
   }
   catch (err) {
     res.status(500).json({ success: false, message: "Internal Server Error !!" });
@@ -186,7 +210,8 @@ exports.updateUserDetails = async (req, res) => {
     if (!name || !email || !mobile)
       return res.status(400).json({ success: false, message: "All fields are required." });
 
-    if (mobile.length < 10)
+    const mobileStr = String(mobile).trim();
+    if (mobileStr.length < 10)
       return res.status(400).json({ success: false, message: "mobile number is invalid." });
     
     const existingUser = await User.findOne({ where: { email, id: { [Op.ne]: userId } } });
@@ -199,11 +224,11 @@ exports.updateUserDetails = async (req, res) => {
 
     objUser.name = name;
     objUser.email = email;
-    objUser.mobile = mobile;
+    objUser.mobile = mobileStr;
 
     await objUser.save();
 
-    return res.status(201).json({ success: true, message: "User registered successfully" });
+    return res.status(200).json({ success: true, message: "User details updated successfully" });
 
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error", error: error.message });

@@ -89,7 +89,7 @@ exports.getWishlist = async (req, res) => {
       include: [
         {
           model: Product,
-          attributes: ["id", "name", "price"],
+          attributes: ["id", "name", "Price"],
           include: [
             {
               model: ProductImage,
@@ -105,7 +105,7 @@ exports.getWishlist = async (req, res) => {
     const data = wishlist.map(item => ({
       productId: item.Product.id,
       productName: item.Product.name,
-      price: item.Product.price,
+      price: item.Product.Price,
       image: item.Product.ProductImages?.[0]?.Path || null
     }));
 

@@ -14,11 +14,11 @@ exports.getProducts = async (req, res) => {
     const whereCondition = { IsActive: true };
     const include = [];
 
-    // 🔍 Search by product name
+    // Search by product name
     if (search)
       whereCondition.name = { [Op.like]: `%${search}%` };
 
-    // 📂 Category filter
+    //  Category filter
     if (categoryId)
       whereCondition.CategoryId = categoryId;
 
@@ -121,8 +121,8 @@ exports.getProductDetails = async (req, res) => {
           include: [{ model: Tag, attributes: ["id", "tag"] }]
         },
         {
-          model: ProductFlavour,
-          include: [{ model: Flavour, attributes: ["id", "flavour"] }]
+          model: Flavour,
+          attributes: ["id", "flavour"]
         }
       ]
     });
@@ -135,15 +135,18 @@ exports.getProductDetails = async (req, res) => {
       data: {
         id: product.id,
         name: product.name,
-          description: product.Description,
-          rating: product.Rating,
-          price: product.Price,
+        description: product.Description,
+        information: product.Information,
+        rating: product.Rating,
+        price: product.Price,
+        discountAmount: product.DiscountPrice,
         dietType: product.eDietType,
+        packetsPerJar: product.PacketsPerJar,
         brand: product.Brand,
-        images: product.ProductImages.map(img => img.Path),
-        weights: product.ProductWeights.map(w => w.Weight),
-        tags: product.ProductTags.map(t => t.Tag),
-        flavours: product.ProductFlavours.map(f => f.Flavour)
+        images: product.ProductImages?.map(img => img.Path) || [],
+        weights: product.ProductWeights?.map(w => w.Weight) || [],
+        tags: product.ProductTags?.map(t => t.Tag) || [],
+        flavours: product.Flavour ? [product.Flavour] : []
       }
     });
 
