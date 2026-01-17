@@ -1,6 +1,6 @@
 const orderService = require("../../services/order.service");
 const Sequelize = require("../../config/db");
-const { Order, OrderItem, Product, Brand } = require("../../models");
+const { Order, OrderItem, Product, Brand, User } = require("../../models");
 const { Orders } = require("../../config/permission");
 const { Op, fn, col, literal } = require("sequelize");
 const { extractToken } = require("../../config/jwt");
@@ -100,6 +100,7 @@ exports.updateOrderPayment = async (req, res) => {
       });
     }
 
+    
     const status = String(paymentStatus ?? "").trim();
     if (!["Unpaid", "Partially Paid", "Paid"].includes(status)) {
       return res.status(400).json({
@@ -227,6 +228,43 @@ exports.getMyOrders = async (req, res) => {
 };
 
 /**
+ * GET SINGLE ORDER DETAILS
+ */
+exports.getOrderDetails = async (req, res) => {
+  try {
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    // Permission check? 
+    // Both Admin and Customer can view details, but Customer only their own.
+    const Token = jwt.Token;
+    const { id } = req.params;
+
+    if (!id) return res.status(400).json({ success: false, message: "Order ID required" });
+
+    const order = await orderService.getOrderById(id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Access Control
+    const isAdmin = Token.permissions.includes(Orders); // Or check role
+    const isOwner = Number(order.CustomerId) === Number(Token.id);
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ success: false, message: "Unauthorized access to this order." });
+    }
+
+    return res.status(200).json({ success: true, data: order });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
  * Get Product-wise pending (not packed) order qty
  */
 exports.getPendingProductQty = async (req, res) => {
@@ -242,13 +280,15 @@ exports.getPendingProductQty = async (req, res) => {
     // Note: OrderItem model does not have `isPacked`. We treat "pending to pack" as
     // items belonging to active order-items in orders that are not yet delivered.
     // Adjust these statuses if your business rules differ.
+    // Include status 5 (Partially Delivered) to track remaining items
     const data = await OrderItem.findAll({
       where: {
         IsActive: true
       },
       attributes: [
         "ItemId",
-        [fn("SUM", col("OrderItem.Qty")), "remainingQty"],
+        [fn("SUM", literal("OrderItem.Qty - COALESCE(OrderItem.DeliveredQty, 0)")), "remainingQty"],
+        [fn("SUM", col("OrderItem.Qty")), "totalQty"],
         [fn("COUNT", fn("DISTINCT", col("OrderItem.OrderId"))), "totalOrders"]
       ],
       include: [
@@ -257,7 +297,7 @@ exports.getPendingProductQty = async (req, res) => {
           attributes: [],
           required: true,
           where: {
-            eOrderStatus: { [Op.in]: [1, 2, 3] }
+            eOrderStatus: { [Op.in]: [1, 2, 3, 5] }
           }
         },
         {
@@ -285,11 +325,13 @@ exports.getPendingProductQty = async (req, res) => {
     });
 
     const response = data.map(item => ({
+      productId: item.Product?.id ?? item.ItemId,
       productName: item.Product?.name ?? null,
       brandName: item.Product?.Brand?.brand ?? null,
       weight: item.Product?.Weight ?? null,
       unitPrice: item.Product?.Price ?? null,
       remainingQty: Number(item.get("remainingQty")),
+      totalQty: Number(item.get("totalQty")),
       totalOrders: Number(item.get("totalOrders"))
     }));
 
@@ -353,3 +395,148 @@ exports.getOrderStatusCounts = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+/**
+ * Get pending orders list for a specific product
+ */
+exports.getPendingProductOrders = async (req, res) => {
+  try {
+    const jwt = extractToken(req);
+    if (jwt.success !== true)
+      return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.permissions.includes(Orders))
+      return res.status(400).json({ success: false, message: "Permission denied." });
+
+    const { productId } = req.query;
+
+    if (!productId)
+      return res.status(400).json({ success: false, message: "Product ID is required." });
+
+    const data = await OrderItem.findAll({
+      where: {
+        ItemId: productId,
+        IsActive: true
+      },
+      include: [
+        {
+          model: Order,
+          required: true,
+          where: {
+            // Pending, Confirmed, Packaging, Partially Delivered
+            eOrderStatus: { [Op.in]: [1, 2, 3, 5] }
+          },
+          include: [
+            {
+              model: User,
+              attributes: ["name", "mobile"]
+            }
+          ]
+        },
+        {
+          model: Product,
+          attributes: ["id", "name"]
+        }
+      ],
+      order: [[col("Order.OrderDate"), "ASC"]]
+    });
+
+    const list = data.map(item => ({
+      orderItemId: item.id,
+      status: item.eStatus,
+      deliveredQty: item.DeliveredQty,
+      orderId: item.Order ? (item.Order.OrderNo || item.Order.id) : "-",
+      orderDbId: item.Order?.id,
+      customerName: item.Order?.User?.name || "Guest",
+      customerPhone: item.Order?.User?.mobile || "—",
+      qty: item.Qty,
+      date: item.Order?.OrderDate
+    }));
+
+    return res.status(200).json({ success: true, data: list });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * UPDATE ORDER ITEMS (ADMIN)
+ * Update status and delivered quantity per item.
+ */
+exports.updateOrderItems = async (req, res) => {
+  try {
+    const jwt = extractToken(req);
+    if (jwt.success !== true) return res.status(400).json(jwt);
+
+    const Token = jwt.Token;
+    if (!Token.permissions.includes(Orders))
+      return res.status(400).json({ success: false, message: "Permission denied." });
+
+    const { orderId, items } = req.body;
+    if (!orderId) return res.status(400).json({ success: false, message: "Order ID is required" });
+
+    const order = await Order.findByPk(orderId, { include: [OrderItem] });
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+    if (Array.isArray(items)) {
+      for (const u of items) {
+        const item = order.OrderItems.find((oi) => oi.id === u.id);
+        if (item) {
+          if (u.deliveredQty !== undefined) item.DeliveredQty = u.deliveredQty;
+          if (u.status !== undefined) item.eStatus = u.status;
+          
+          // Auto-infer status if deliveredQty is set but status isn't (or both)
+          if (u.deliveredQty !== undefined) {
+             const dQty = Number(u.deliveredQty);
+             const oQty = Number(item.Qty);
+             if (dQty >= oQty) item.eStatus = 6;
+             else if (dQty > 0) item.eStatus = 5;
+             // Else if 0, keep as is or set to Pending/Confirmed? Keeping as is is safer.
+          }
+          await item.save();
+        }
+      }
+    }
+
+    await order.reload();
+
+    // Recalculate Order Status
+    const itemStatuses = order.OrderItems.map((i) => Number(i.eStatus));
+    const all6 = itemStatuses.every((s) => s === 6);
+    const hasPartial = itemStatuses.some((s) => s === 5);
+    const hasDelivered = itemStatuses.some((s) => s === 6);
+    
+    let nextStatus = order.eOrderStatus;
+
+    if (all6) {
+      nextStatus = 6; // Delivered
+    } else if (hasPartial || (hasDelivered && !all6)) {
+      nextStatus = 5; // Partially Delivered
+    } else {
+      // Majority Logic
+      const counts = {};
+      itemStatuses.forEach((s) => { counts[s] = (counts[s] || 0) + 1; });
+      let maxFreq = 0;
+      let majStatus = nextStatus;
+      for (const [s, c] of Object.entries(counts)) {
+        if (c > maxFreq) {
+          maxFreq = c;
+          majStatus = Number(s);
+        }
+      }
+      nextStatus = majStatus;
+    }
+
+    if (order.eOrderStatus !== nextStatus) {
+      order.eOrderStatus = nextStatus;
+      await order.save();
+    }
+
+    return res.status(200).json({ success: true, message: "Order items updated" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+

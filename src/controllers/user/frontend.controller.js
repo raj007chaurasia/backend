@@ -22,14 +22,14 @@ exports.getProducts = async (req, res) => {
     if (categoryId)
       whereCondition.CategoryId = categoryId;
 
-    // 💰 Price filter
+   
     if (minPrice || maxPrice) {
       whereCondition.Price = {};
       if (minPrice) whereCondition.Price[Op.gte] = Number(minPrice);
       if (maxPrice) whereCondition.Price[Op.lte] = Number(maxPrice);
     }
 
-    // 🏷️ Tag filter
+   
     if (tagIds) {
       include.push({
         model: ProductTag,
@@ -43,7 +43,7 @@ exports.getProducts = async (req, res) => {
       });
     }
 
-    // ⚖️ Weight filter
+
     if (weightIds) {
       include.push({
         model: ProductWeight,
@@ -56,7 +56,7 @@ exports.getProducts = async (req, res) => {
       });
     }
 
-    // 🖼️ Product Images
+
     include.push({ model: ProductImage, attributes: ["Path"] });
 
     const { rows, count } = await Product.findAndCountAll({
@@ -130,6 +130,16 @@ exports.getProductDetails = async (req, res) => {
     if (!product)
       return res.status(404).json({ success: false, message: "Product not found" });
 
+    
+    const dietTypeMap = {
+      1: "VEG",
+      2: "NON_VEG",
+      3: "VEGAN",
+      4: "SUGARFREE",
+      5: "GLUTENFREE"
+    };
+    const dietTypeLabel = product.eDietType != null ? (dietTypeMap[product.eDietType] || "") : "";
+
     return res.status(200).json({
       success: true,
       data: {
@@ -140,7 +150,7 @@ exports.getProductDetails = async (req, res) => {
         rating: product.Rating,
         price: product.Price,
         discountAmount: product.DiscountPrice,
-        dietType: product.eDietType,
+        dietType: dietTypeLabel,
         packetsPerJar: product.PacketsPerJar,
         brand: product.Brand,
         images: product.ProductImages?.map(img => img.Path) || [],

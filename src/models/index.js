@@ -14,6 +14,19 @@ const OrderItem = require("./admin/orderItem.model")(sequelize);
 const Settings = require("./admin/settings.model")(sequelize);
 const Contact = require("./contact.model")(sequelize);
 
+// Check for undefined models immediately to catch import errors
+const models = {
+  User, Admin, Permission, Brand, Weight, Tag, Category, Flavour, 
+  Product, Order, OrderItem, Settings, Contact
+};
+
+Object.keys(models).forEach(modelName => {
+  if (!models[modelName]) {
+    console.error(`❌ FATAL ERROR: Model '${modelName}' is undefined. Check file path and export.`);
+    throw new Error(`Model '${modelName}' failed to initialize.`);
+  }
+});
+
 const ProductImage = require("./admin/productImage.model")(sequelize);
 const ProductWeight = require("./admin/productWeight.model")(sequelize);
 const ProductTag = require("./admin/productTag.model")(sequelize);
@@ -27,6 +40,16 @@ const UserOtp = require("./user/userOtp.model")(sequelize);
 const ProductWishlist = require("./user/wishlist.model")(sequelize);
 const CartItem = require("./user/cartItem.model")(sequelize);
 const CustomerAddress = require("./user/customerAddress.model")(sequelize);
+
+// Validate secondary models
+const secondaryModels = { ProductImage, ProductWeight, ProductTag, ProductFlavour, UserOtp, ProductWishlist, CartItem, CustomerAddress };
+Object.keys(secondaryModels).forEach(modelName => {
+  if (!secondaryModels[modelName]) {
+    console.error(`❌ FATAL ERROR: Secondary Model '${modelName}' is undefined.`);
+    throw new Error(`Model '${modelName}' failed to initialize.`);
+  }
+});
+
 
 // Relations
 

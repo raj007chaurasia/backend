@@ -56,7 +56,7 @@ exports.getOrdersByCustomer = async (customerId) => {
         include: [
           {
             model: Product,
-            attributes: ["id", "name", "Price"],
+            attributes: ["id", "name", "Price", "PacketsPerJar"],
             include: [
               {
                 model: ProductImage,
@@ -97,4 +97,36 @@ exports.getAdminOrders = async ({ page, limit, search }) => {
   });
 
   return { rows, count };
+};
+
+exports.getOrderById = async (id) => {
+  return Order.findByPk(id, {
+    include: [
+      {
+        model: CustomerAddress,
+        required: false
+      },
+      {
+        model: User,
+        attributes: ["id", "name", "mobile"]
+      },
+      {
+        model: OrderItem,
+        include: [
+          {
+            model: Product,
+            attributes: ["id", "name", "Price", "PacketsPerJar"],
+            include: [
+              {
+                model: ProductImage,
+                attributes: ["Path"],
+                limit: 1,
+                separate: true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  });
 };

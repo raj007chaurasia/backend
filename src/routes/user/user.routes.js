@@ -10,11 +10,11 @@ const {
   updateUserDetails
 } = require("../../controllers/user/user.controller");
 
-router.post("/address/save", saveAddress);
-router.get("/address/", getAllAddresses);
-router.get("/address/:id", getAddressById);
 router.post("/change_password", changePassword);
 router.get("/me", getMe);
 router.post("/save", updateUserDetails);
+router.post("/address/save", saveAddress);
+router.get("/address/", getAllAddresses);
+router.get("/address/:id", getAddressById);
 
 module.exports = router;

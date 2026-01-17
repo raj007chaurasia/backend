@@ -62,7 +62,7 @@ exports.saveAddress = async (req, res) => {
         pincode: pincode
       })
 
-      return res.status(201).json({ success: true, message: "Address added successfully" });
+      return res.status(201).json({ success: true, message: "Address added successfully", data: { id: Address.id } });
     }
     else {
       Address = await CustomerAddress.create({
@@ -75,7 +75,7 @@ exports.saveAddress = async (req, res) => {
         pincode: pincode
       });
 
-      return res.status(201).json({ success: true, message: "Address added successfully" });
+      return res.status(201).json({ success: true, message: "Address added successfully", data: { id: Address.id } });
     }
   } catch (err) {
     res.status(500).json({ success: false, message: "Internal Server Error !!" });

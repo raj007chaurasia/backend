@@ -22,8 +22,8 @@ router.post("/setBestSeller", setBestSellerProduct);
 router.get("/low-stock", getLowStockProducts);
 router.patch("/:id/stock", updateProductStock);
 router.patch("/:id/status", updateProductActiveStatus);
+router.get("/", getAllProducts);
 router.get("/:id", getProductById);
 router.delete("/:id", deleteProduct);
-router.get("/", getAllProducts);
 
 module.exports = router;
